@@ -1,3 +1,5 @@
+import { isIP } from 'node:net';
+
 /**
  * The only module that reads process.env. Every service calls loadConfig() once at
  * startup; invalid or missing values stop the process with a clear message instead of
@@ -36,6 +38,14 @@ export interface Config {
   mail: {
     transport: 'console';
     from: string;
+  };
+  scanner: {
+    /** Honest User-Agent sent on every outbound request; must name the product. */
+    userAgent: string;
+    /** Hostnames allowed to resolve to private addresses (local test WordPress). Never in production. */
+    allowPrivateHosts: string[];
+    /** Optional DNS servers for ownership TXT lookups; empty = system resolver. */
+    dnsResolvers: string[];
   };
 }
 
@@ -113,6 +123,13 @@ class Reader {
   }
 }
 
+function list(value: string | undefined): string[] {
+  return (value ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 function originOf(url: string): string | undefined {
   try {
     return new URL(url).origin;
@@ -127,10 +144,7 @@ export function loadConfig(env: Env = process.env): Config {
   const isProd = nodeEnv === 'production';
 
   const webBaseUrl = r.url('WEB_BASE_URL', ['http:', 'https:'], isProd ? undefined : 'http://localhost:8080');
-  const extraOrigins = (env.EXTRA_ALLOWED_ORIGINS ?? '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const extraOrigins = list(env.EXTRA_ALLOWED_ORIGINS);
 
   const allowedOrigins: string[] = [];
   for (const candidate of [webBaseUrl, ...extraOrigins]) {
@@ -166,11 +180,24 @@ export function loadConfig(env: Env = process.env): Config {
       transport: r.oneOf('MAIL_TRANSPORT', ['console'] as const, 'console'),
       from: r.string('MAIL_FROM', 'Security Health Check <no-reply@localhost>'),
     },
+    scanner: {
+      userAgent: r.string('SCANNER_USER_AGENT', `SecurityHealthCheck/0.1 (+${webBaseUrl.replace(/\/+$/, '')}/scanner)`),
+      allowPrivateHosts: list(env.SCAN_ALLOW_PRIVATE_HOSTS).map((h) => h.toLowerCase()),
+      dnsResolvers: list(env.DNS_RESOLVERS),
+    },
   };
+
+  if (!/SecurityHealthCheck/i.test(config.scanner.userAgent)) {
+    r.problems.push('SCANNER_USER_AGENT must name the product (contain "SecurityHealthCheck")');
+  }
+  for (const server of config.scanner.dnsResolvers) {
+    if (isIP(server) === 0) r.problems.push(`DNS_RESOLVERS entry is not an IP address: ${server}`);
+  }
 
   if (isProd) {
     if (!config.session.cookieSecure) r.problems.push('COOKIE_SECURE must be true in production');
     if (!config.web.baseUrl.startsWith('https://')) r.problems.push('WEB_BASE_URL must use https in production');
+    if (config.scanner.allowPrivateHosts.length > 0) r.problems.push('SCAN_ALLOW_PRIVATE_HOSTS must be empty in production');
   }
 
   if (r.problems.length > 0) throw new ConfigError(r.problems);

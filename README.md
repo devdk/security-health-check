@@ -2,7 +2,27 @@
 
 An attacker's-eye security audit for WordPress sites. Owners add a site, prove they own it, and get a scored security report. A companion WordPress plugin adds an inside-view audit.
 
-> **Status: Phase 1 of 7.** Scaffold, Docker Compose, config, database schema and migrations, and authentication are done. Site management, scanning and reports come in later phases. A full README follows in Phase 7.
+> **Status: Phase 2.** Done: scaffold, Docker Compose, config, schema and migrations, authentication, site management and ownership verification. Scanning and reports come next. A full README follows in the hardening phase.
+
+## Ownership verification
+
+A site can't be scanned until its owner proves control, using either method:
+
+| Method | What the owner does |
+|---|---|
+| DNS | Adds a TXT record `_shc-verify.<domain>` = `shc-verify=<token>` (a record on the domain itself also counts) |
+| File | Serves `https://<domain>/shc-verify-<token>.txt` containing exactly `shc-verify=<token>` |
+
+- Tokens are 128-bit, unique per site and per owner, so two people can each verify the same domain independently.
+- File checks require an exact body match, so "soft 404" pages that echo the path don't pass. They follow redirects only within the same site (apex ↔ www), and fall back to plain HTTP only when HTTPS is unreachable.
+- Before every scan, `ensureFreshVerification` (in `packages/core`) re-checks ownership with the stored method whenever the last success is more than 24 hours old. If the re-check fails, the scan is refused.
+
+All outbound requests go through `SafeFetcher` (`packages/net`):
+- http/https on ports 80 and 443 only;
+- refuses any hostname that resolves to a private, loopback, link-local, metadata or reserved address;
+- pins the socket to the vetted IP, which defeats DNS rebinding;
+- re-checks every redirect and caps time and response size;
+- always sends the honest `SecurityHealthCheck` User-Agent, which links to the public `/scanner` page.
 
 ## Prerequisites
 
@@ -63,8 +83,10 @@ apps/api        Fastify API (auth now; sites, scans, reports, plugin ingestion l
 apps/worker     BullMQ worker (skeleton now; scan jobs in Phase 3)
 apps/web        React + Vite dashboard
 packages/config Env loading and validation: the only code that reads process.env
+packages/core   Business rules shared by API and worker (audit log, re-verify before scan)
 packages/db     Drizzle schema, generated SQL migrations, DB client
-packages/shared Domain constants shared by every app
+packages/net    SSRF-safe HTTP client, IP policy, DNS, ownership checks
+packages/shared Domain constants and validation shared by every app (incl. the browser)
 docker/         Dockerfiles and nginx config
 scripts/        Build and setup helpers
 ```
@@ -80,6 +102,14 @@ scripts/        Build and setup helpers
 - **Rate limits**: per user (or per IP when signed out) globally, stricter per-IP limits on auth endpoints, stored in Valkey.
 - **Queries** go through Drizzle and are always parameterised. Every endpoint validates its input against a schema, and response schemas strip unexpected fields.
 - **Containers** run as non-root with read-only filesystems, dropped capabilities and `no-new-privileges`. Only the web port is published, and only on 127.0.0.1.
+
+## Git policy
+
+Commits are authored by people only. `.githooks/commit-msg` rejects any commit that credits Claude or Anthropic as an author, co-author or contributor. Enable it in a fresh clone with:
+
+```bash
+git config core.hooksPath .githooks
+```
 
 ## Choices to note
 

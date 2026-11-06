@@ -7,6 +7,8 @@ COPY package.json package-lock.json ./
 COPY packages/shared/package.json packages/shared/
 COPY packages/config/package.json packages/config/
 COPY packages/db/package.json packages/db/
+COPY packages/net/package.json packages/net/
+COPY packages/core/package.json packages/core/
 COPY apps/api/package.json apps/api/
 COPY apps/worker/package.json apps/worker/
 COPY apps/web/package.json apps/web/

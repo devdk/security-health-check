@@ -93,7 +93,7 @@ describe('rate limiting', () => {
   let limited: TestContext;
 
   beforeAll(async () => {
-    limited = await createTestContext({ authPerMinute: 3 });
+    limited = await createTestContext({ rateLimit: { authPerMinute: 3 } });
   });
   afterAll(async () => {
     await limited.close();

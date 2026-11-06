@@ -9,6 +9,8 @@ import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { ScannerPage } from './pages/ScannerPage';
+import { SiteDetailPage } from './pages/SiteDetailPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import './styles.css';
 
@@ -16,8 +18,12 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
-    children: [{ index: true, element: <DashboardPage /> }],
+    children: [
+      { index: true, element: <DashboardPage /> },
+      { path: 'sites/:siteId', element: <SiteDetailPage /> },
+    ],
   },
+  { path: '/scanner', element: <ScannerPage /> },
   { path: '/login', element: <GuestOnly><LoginPage /></GuestOnly> },
   { path: '/register', element: <GuestOnly><RegisterPage /></GuestOnly> },
   { path: '/forgot-password', element: <GuestOnly><ForgotPasswordPage /></GuestOnly> },

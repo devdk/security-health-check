@@ -16,6 +16,24 @@ export interface User {
   plan: 'free' | 'pro';
 }
 
+export type SiteStatus = 'verified' | 'stale' | 'unverified';
+export type VerifyMethod = 'dns_txt' | 'file';
+
+export interface Site {
+  id: string;
+  domain: string;
+  status: SiteStatus;
+  verificationMethod: VerifyMethod | null;
+  verifiedAt: string | null;
+  lastVerifyAttemptAt: string | null;
+  lastVerifyError: string | null;
+  createdAt: string;
+  instructions: {
+    dns: { name: string; type: 'TXT'; value: string };
+    file: { filename: string; url: string; content: string };
+  };
+}
+
 /** JSON fetch against our own API. Cookies are first-party, so nothing is stored in JS. */
 export async function api<T>(path: string, options: { method?: string; body?: unknown } = {}): Promise<T> {
   const init: RequestInit = {

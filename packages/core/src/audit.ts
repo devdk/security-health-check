@@ -9,7 +9,13 @@ export type AuditEventName =
   | 'login_locked'
   | 'logout'
   | 'password_reset_requested'
-  | 'password_reset';
+  | 'password_reset'
+  | 'site_added'
+  | 'site_deleted'
+  | 'site_verified'
+  | 'site_verify_failed'
+  | 'site_reverified'
+  | 'site_reverify_failed';
 
 export interface AuditInput {
   event: AuditEventName;

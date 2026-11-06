@@ -1,8 +1,8 @@
 import { eq, sql } from 'drizzle-orm';
 import type { Config } from '@shc/config';
-import type { Plan } from '@shc/shared';
+import { effectivePlan, type Plan } from '@shc/shared';
 import { subscriptions, users, type Database } from '@shc/db';
-import { audit } from '../lib/audit';
+import { audit } from '@shc/core';
 import { normaliseEmail } from '../lib/email';
 import { HttpError, invalidCredentials } from '../lib/errors';
 import type { Mailer } from '../lib/mailer';
@@ -230,7 +230,6 @@ export class AuthService {
       .where(eq(users.id, userId))
       .limit(1);
     if (!row) throw new HttpError(401, 'unauthorised', 'Sign in required');
-    const paid = row.plan === 'pro' && (row.status === 'active' || row.status === 'trialing');
-    return { id: row.id, email: row.email, emailVerified: row.verifiedAt !== null, plan: paid ? 'pro' : 'free' };
+    return { id: row.id, email: row.email, emailVerified: row.verifiedAt !== null, plan: effectivePlan(row.plan, row.status) };
   }
 }

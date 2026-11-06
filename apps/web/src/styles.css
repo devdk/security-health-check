@@ -15,6 +15,8 @@
   --success-text: #146c43;
   --info-bg: #e8f1fd;
   --info-text: #1d4f91;
+  --warn-bg: #fdf3dc;
+  --warn-text: #7a4b00;
   --radius: 10px;
   --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 4px 16px rgb(16 24 40 / 6%);
   --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -38,6 +40,8 @@
     --success-text: #9ee2b8;
     --info-bg: #15263d;
     --info-text: #a9c8f5;
+    --warn-bg: #3a2c0d;
+    --warn-text: #f5d28a;
     --shadow: 0 1px 2px rgb(0 0 0 / 40%);
   }
 }
@@ -301,7 +305,219 @@ form {
   place-items: center;
 }
 
+/* Utilities */
+.small {
+  font-size: 0.9rem;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.page {
+  display: grid;
+  gap: 1.25rem;
+}
+.page-header {
+  margin-bottom: 0;
+}
+.card > h2 + p,
+.card > p:last-child {
+  margin-bottom: 0;
+}
+.breadcrumb {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.site-title {
+  word-break: break-all;
+}
+.input {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  min-width: 0;
+}
+.btn-small {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-danger {
+  background: transparent;
+  color: var(--danger-text);
+  border-color: var(--danger-text);
+}
+.btn-danger:hover {
+  background: var(--danger-bg);
+}
+.actions {
+  margin-top: 1rem;
+}
+
+/* Add-site form */
+.inline-form {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+.inline-form .input {
+  flex: 1;
+}
+
+/* Site list */
+.site-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.site-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+}
+.site-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.site-domain {
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  word-break: break-all;
+}
+.site-domain:hover {
+  text-decoration: underline;
+}
+
+/* Status badges */
+.badge-verified {
+  background: var(--success-bg);
+  color: var(--success-text);
+  border-color: transparent;
+}
+.badge-stale {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border-color: transparent;
+}
+.badge-unverified {
+  color: var(--muted);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border);
+  margin: 1rem 0 0;
+}
+.tab {
+  font: inherit;
+  font-weight: 550;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.6rem 0.9rem;
+  color: var(--muted);
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+.tab-active {
+  color: var(--text);
+  border-bottom-color: var(--brand);
+}
+.tab-panel {
+  padding-top: 0.5rem;
+}
+.steps {
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 1rem;
+}
+.steps li {
+  padding-left: 0.25rem;
+}
+
+/* Copyable values */
+.copy-field {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.6rem 0;
+}
+.copy-label {
+  font-size: 0.85rem;
+  font-weight: 550;
+  color: var(--muted);
+}
+.copy-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+.code {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  font-size: 0.9rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  overflow-wrap: anywhere;
+}
+.code-inline {
+  font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 0.3rem;
+  overflow-wrap: anywhere;
+}
+
+.danger-zone {
+  border-color: var(--danger-bg);
+}
+
+/* Public prose pages */
+.prose-shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 16px;
+  display: grid;
+  gap: 1.5rem;
+}
+.prose h2 {
+  margin-top: 1.5rem;
+}
+.prose li + li {
+  margin-top: 0.35rem;
+}
+
 @media (max-width: 560px) {
+  .inline-form {
+    flex-direction: column;
+  }
+  .site-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
   .topbar-email {
     display: none;
   }

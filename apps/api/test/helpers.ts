@@ -3,6 +3,8 @@ import { Redis } from 'ioredis';
 import { expect } from 'vitest';
 import { loadConfig, type Config } from '@shc/config';
 import { createDb, type Database } from '@shc/db';
+import type { OwnershipChecker, OwnershipResult } from '@shc/net';
+import type { VerifyMethod } from '@shc/shared';
 import { buildApp, type App } from '../src/app';
 import { MemoryMailer } from '../src/lib/mailer';
 
@@ -17,7 +19,21 @@ export interface TestContext {
   close: () => Promise<void>;
 }
 
-export async function createTestContext(rateLimit: Partial<Config['rateLimit']> = {}): Promise<TestContext> {
+/** Ownership checker that never touches the network; tests set the next answer. */
+export class FakeOwnership implements OwnershipChecker {
+  calls: Array<{ method: VerifyMethod; domain: string; token: string }> = [];
+  next: OwnershipResult = { ok: true, detail: 'TXT record found at _shc-verify.example.com' };
+
+  async check(method: VerifyMethod, domain: string, token: string): Promise<OwnershipResult> {
+    this.calls.push({ method, domain, token });
+    return this.next;
+  }
+}
+
+export async function createTestContext(
+  options: { rateLimit?: Partial<Config['rateLimit']>; ownership?: OwnershipChecker } = {},
+): Promise<TestContext> {
+  const rateLimit = options.rateLimit ?? {};
   const base = loadConfig({
     NODE_ENV: 'test',
     LOG_LEVEL: 'silent',
@@ -32,7 +48,14 @@ export async function createTestContext(rateLimit: Partial<Config['rateLimit']> 
   const dbHandle = createDb(config.databaseUrl, { max: 4 });
   const redis = new Redis(config.redisUrl, { maxRetriesPerRequest: 3 });
   const mailer = new MemoryMailer();
-  const app = await buildApp({ config, db: dbHandle.db, redis, mailer, logger: false });
+  const app = await buildApp({
+    config,
+    db: dbHandle.db,
+    redis,
+    mailer,
+    ownership: options.ownership ?? new FakeOwnership(),
+    logger: false,
+  });
   await app.ready();
 
   return {
@@ -69,6 +92,20 @@ export async function post(ctx: TestContext, url: string, payload: unknown, cook
     payload: payload as Record<string, unknown>,
     headers: { origin: ORIGIN, ...(cookie ? { cookie } : {}) },
   });
+}
+
+export async function get(ctx: TestContext, url: string, cookie?: string) {
+  return ctx.app.inject({ method: 'GET', url, headers: cookie ? { cookie } : {} });
+}
+
+export async function del(ctx: TestContext, url: string, cookie?: string) {
+  return ctx.app.inject({ method: 'DELETE', url, headers: { origin: ORIGIN, ...(cookie ? { cookie } : {}) } });
+}
+
+/** Registers, verifies and signs in a user; returns their cookie header. */
+export async function signedInUser(ctx: TestContext, email: string, password = 'a long enough passphrase'): Promise<string> {
+  await registerAndVerify(ctx, email, password);
+  return login(ctx, email, password);
 }
 
 export async function registerAndVerify(ctx: TestContext, email: string, password: string): Promise<void> {

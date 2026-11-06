@@ -40,3 +40,25 @@ export type ServiceRequestStatus = (typeof SERVICE_REQUEST_STATUSES)[number];
 /** Password rules shared by the API (enforced) and the web app (hinted). */
 export const PASSWORD_MIN_LENGTH = 12;
 export const PASSWORD_MAX_LENGTH = 128;
+
+/** Ownership checks older than this must be repeated before a scan may run. */
+export const VERIFICATION_TTL_HOURS = 24;
+
+/** Maximum sites per account. */
+export const SITE_LIMITS: Record<Plan, number> = { free: 3, pro: 25 };
+
+export type SiteStatus = 'verified' | 'stale' | 'unverified';
+
+/** verified = checked within the TTL; stale = verified before but needs re-checking. */
+export function siteStatus(verifiedAt: Date | string | null, now: number = Date.now()): SiteStatus {
+  if (!verifiedAt) return 'unverified';
+  const at = typeof verifiedAt === 'string' ? Date.parse(verifiedAt) : verifiedAt.getTime();
+  return now - at < VERIFICATION_TTL_HOURS * 60 * 60 * 1000 ? 'verified' : 'stale';
+}
+
+/** A paid plan only counts while its subscription is in good standing. */
+export function effectivePlan(plan: Plan | null | undefined, status: SubscriptionStatus | null | undefined): Plan {
+  return plan === 'pro' && (status === 'active' || status === 'trialing') ? 'pro' : 'free';
+}
+
+export * from './domain';

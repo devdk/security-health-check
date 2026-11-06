@@ -4,6 +4,7 @@ import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import type { Redis } from 'ioredis';
 import type { Config } from '@shc/config';
 import type { Database } from '@shc/db';
+import { createTxtResolver, OwnershipVerifier, SafeFetcher, type OwnershipChecker } from '@shc/net';
 import { ConsoleMailer, type Mailer } from './lib/mailer';
 import { registerErrorHandling } from './plugins/errors';
 import { registerRateLimit } from './plugins/rate-limit';
@@ -11,7 +12,9 @@ import { registerSecurity } from './plugins/security';
 import { registerSession } from './plugins/session';
 import { authRoutes } from './routes/auth';
 import { healthRoutes } from './routes/health';
+import { siteRoutes } from './routes/sites';
 import { AuthService } from './services/auth-service';
+import { SiteService } from './services/site-service';
 import { SessionService } from './services/session-service';
 import { UserTokenService } from './services/user-token-service';
 
@@ -21,6 +24,8 @@ export interface AppDeps {
   redis: Redis;
   /** Defaults to the transport named in config (console in development). */
   mailer?: Mailer;
+  /** Defaults to real DNS + SSRF-safe HTTP checks. Tests inject a fake. */
+  ownership?: OwnershipChecker;
   logger?: FastifyServerOptions['logger'];
 }
 
@@ -49,11 +54,20 @@ export async function buildApp(deps: AppDeps) {
   const tokens = new UserTokenService(db);
   const auth = new AuthService({ db, config, mailer, sessions, tokens });
 
+  const ownership =
+    deps.ownership ??
+    new OwnershipVerifier({
+      fetcher: new SafeFetcher({ userAgent: config.scanner.userAgent, allowPrivateHosts: config.scanner.allowPrivateHosts }),
+      resolveTxt: createTxtResolver({ servers: config.scanner.dnsResolvers }),
+    });
+  const siteService = new SiteService({ db, ownership, allowHosts: config.scanner.allowPrivateHosts });
+
   const cookies = await registerSession(app, config, sessions);
   await registerRateLimit(app, config, redis);
 
   await app.register(healthRoutes, { prefix: '/api', db, redis });
   await app.register(authRoutes, { prefix: '/api/auth', config, auth, sessions, cookies });
+  await app.register(siteRoutes, { prefix: '/api/sites', sites: siteService });
 
   return app;
 }
