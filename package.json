@@ -1,0 +1,33 @@
+{
+  "name": "security-health-check",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Attacker's-eye security audit for WordPress websites",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "setup:env": "node scripts/init-env.mjs",
+    "dev:api": "npm run dev -w @shc/api",
+    "dev:worker": "npm run dev -w @shc/worker",
+    "dev:web": "npm run dev -w @shc/web",
+    "db:generate": "npm run generate -w @shc/db",
+    "db:migrate": "npm run migrate -w @shc/db",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

@@ -1,0 +1,21 @@
+#!/bin/sh
+# Repository policy: commits are authored by humans only. No AI tool may be credited
+# as author, co-author or contributor. Enabled with: git config core.hooksPath .githooks
+
+msg_file="$1"
+pattern='claude|anthropic'
+
+if grep -qiE "^(co-authored-by|signed-off-by|authored-by):.*($pattern)" "$msg_file" \
+  || grep -qiE "noreply@anthropic\.com|generated with \[?claude" "$msg_file"; then
+  echo "commit-msg: the message credits Claude/Anthropic. This repository does not allow AI attribution." >&2
+  exit 1
+fi
+
+for ident in "$(git var GIT_AUTHOR_IDENT)" "$(git var GIT_COMMITTER_IDENT)"; do
+  if echo "$ident" | grep -qiE "$pattern"; then
+    echo "commit-msg: author/committer identity mentions Claude/Anthropic: $ident" >&2
+    exit 1
+  fi
+done
+
+exit 0

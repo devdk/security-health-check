@@ -1,0 +1,27 @@
+{
+  "name": "@shc/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=../../.env src/main.ts",
+    "build": "node ../../scripts/build-app.mjs --outdir dist src/main.ts ../../packages/db/src/cli-migrate.ts=migrate",
+    "start": "node --enable-source-maps dist/main.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.5",
+    "@fastify/helmet": "^13.2.0",
+    "@fastify/rate-limit": "^11.2.2",
+    "@fastify/type-provider-typebox": "^6.3.0",
+    "@shc/config": "0.1.0",
+    "@shc/db": "0.1.0",
+    "@shc/shared": "0.1.0",
+    "argon2": "^0.45.2",
+    "drizzle-orm": "^0.45.4",
+    "fastify": "^5.12.8",
+    "ioredis": "^6.0.0",
+    "pg": "^8.23.1",
+    "typebox": "^1.4.4"
+  }
+}

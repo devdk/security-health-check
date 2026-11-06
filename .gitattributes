@@ -1,0 +1,6 @@
+# Normalise line endings so shell scripts, PHP and Docker files work on Linux containers.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary

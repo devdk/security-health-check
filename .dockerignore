@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/coverage
+**/*.log
+.git
+.env
+.env.*
+!.env.example
+docker-compose*.yml
+wp-plugin

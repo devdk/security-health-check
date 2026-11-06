@@ -1,0 +1,139 @@
+# Local stack: docker compose up --build   →   http://localhost:8080
+# Secrets come from .env (create it with `npm run setup:env`). Nothing secret lives here.
+name: security-health-check
+
+x-hardening: &hardening
+  read_only: true
+  tmpfs:
+    - /tmp
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+x-node-env: &node-env
+  NODE_ENV: ${APP_ENV:-development}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  DATABASE_URL: postgres://${POSTGRES_USER:?run npm run setup:env}:${POSTGRES_PASSWORD:?run npm run setup:env}@postgres:5432/${POSTGRES_DB:-shc}
+  REDIS_URL: redis://:${REDIS_PASSWORD:?run npm run setup:env}@redis:6379/0
+  WEB_BASE_URL: http://localhost:${WEB_HOST_PORT:-8080}
+  COOKIE_SECURE: ${COOKIE_SECURE:-true}
+  MAIL_TRANSPORT: console
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-shc}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5442}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Valkey: the BSD-licensed, protocol-compatible fork of Redis. BullMQ and ioredis support it.
+  redis:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    command: ["valkey-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    volumes:
+      - redisdata:/data
+    ports:
+      - "127.0.0.1:${REDIS_HOST_PORT:-6389}:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    image: shc-api:local
+    build:
+      context: .
+      dockerfile: docker/node.Dockerfile
+      args:
+        APP: api
+    command: ["node", "--enable-source-maps", "dist/migrate.js"]
+    environment:
+      <<: *node-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    <<: *hardening
+
+  api:
+    image: shc-api:local
+    build:
+      context: .
+      dockerfile: docker/node.Dockerfile
+      args:
+        APP: api
+    restart: unless-stopped
+    environment:
+      <<: *node-env
+      API_HOST: 0.0.0.0
+      API_PORT: "3000"
+      # Exactly one proxy (nginx) sits in front. The API port is not published to the host.
+      TRUST_PROXY_HOPS: "1"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    <<: *hardening
+
+  worker:
+    image: shc-worker:local
+    build:
+      context: .
+      dockerfile: docker/node.Dockerfile
+      args:
+        APP: worker
+    restart: unless-stopped
+    environment:
+      <<: *node-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    <<: *hardening
+
+  web:
+    image: shc-web:local
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${WEB_HOST_PORT:-8080}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  pgdata:
+  redisdata:
