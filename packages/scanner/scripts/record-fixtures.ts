@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { NetError, type FetchOptions, type Fetcher, type SafeResponse } from '@shc/net';
 import { InMemoryRateLimiter } from '../src/rate-limit';
 import { runScan } from '../src/engine';
-import { noVulns } from '../src/testing';
+import { FakeTlsProbe, noVulns } from '../src/testing';
 
 const PORT = Number(process.env.TESTWP_HOST_PORT ?? 8081);
 const DOMAIN = 'wordpress.test';
@@ -62,6 +62,8 @@ const outcome = await runScan({
   fetcher: new RecordingFetcher(),
   limiter: new InMemoryRateLimiter(500),
   vulns: noVulns,
+  // The test site has no HTTPS; an empty probe answers "connection refused" like it would.
+  tlsProbe: new FakeTlsProbe({}),
   maxRequests: 150,
   timeoutMs: 120_000,
 });

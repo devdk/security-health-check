@@ -1,0 +1,74 @@
+{
+  "resultsPerPage": 4,
+  "startIndex": 0,
+  "totalResults": 4,
+  "format": "NVD_CVE",
+  "version": "2.0",
+  "timestamp": "2026-11-08T10:00:00.000",
+  "vulnerabilities": [
+    {
+      "cve": {
+        "id": "CVE-2024-4577",
+        "published": "2024-06-09T20:15:52.153",
+        "lastModified": "2025-01-01T00:00:00.000",
+        "vulnStatus": "Analyzed",
+        "descriptions": [
+          { "lang": "en", "value": "In PHP versions 8.1.* before 8.1.29, 8.2.* before 8.2.20, 8.3.* before 8.3.8, when using Apache and PHP-CGI on Windows, some characters may be reinterpreted. Further detail follows." }
+        ],
+        "metrics": {
+          "cvssMetricV31": [{ "source": "nvd@nist.gov", "type": "Primary", "cvssData": { "version": "3.1", "baseScore": 9.8, "baseSeverity": "CRITICAL" } }]
+        },
+        "weaknesses": [{ "source": "nvd@nist.gov", "type": "Primary", "description": [{ "lang": "en", "value": "CWE-78" }] }],
+        "configurations": [
+          {
+            "operator": "AND",
+            "nodes": [
+              {
+                "operator": "OR",
+                "negate": false,
+                "cpeMatch": [
+                  { "vulnerable": true, "criteria": "cpe:2.3:a:php:php:*:*:*:*:*:*:*:*", "versionStartIncluding": "8.1.0", "versionEndExcluding": "8.1.29" },
+                  { "vulnerable": true, "criteria": "cpe:2.3:a:php:php:*:*:*:*:*:*:*:*", "versionStartIncluding": "8.2.0", "versionEndExcluding": "8.2.20" }
+                ]
+              },
+              { "operator": "OR", "negate": false, "cpeMatch": [{ "vulnerable": false, "criteria": "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*" }] }
+            ]
+          }
+        ],
+        "references": [{ "url": "https://github.com/php/php-src/security/advisories/GHSA-3qgc-jrrr-25jv", "source": "security@php.net" }]
+      }
+    },
+    {
+      "cve": {
+        "id": "CVE-2023-0001",
+        "published": "2023-01-01T00:00:00.000",
+        "lastModified": "2023-02-01T00:00:00.000",
+        "vulnStatus": "Analyzed",
+        "descriptions": [{ "lang": "en", "value": "An exact-version example affecting PHP 7.4.33 only." }],
+        "metrics": { "cvssMetricV2": [{ "cvssData": { "version": "2.0", "baseScore": 5.0 }, "baseSeverity": "MEDIUM" }] },
+        "configurations": [{ "nodes": [{ "operator": "OR", "negate": false, "cpeMatch": [{ "vulnerable": true, "criteria": "cpe:2.3:a:php:php:7.4.33:*:*:*:*:*:*:*" }] }] }],
+        "references": []
+      }
+    },
+    {
+      "cve": {
+        "id": "CVE-2022-9999",
+        "published": "2022-01-01T00:00:00.000",
+        "lastModified": "2022-01-02T00:00:00.000",
+        "vulnStatus": "Rejected",
+        "descriptions": [{ "lang": "en", "value": "** REJECT ** Duplicate." }],
+        "configurations": [{ "nodes": [{ "cpeMatch": [{ "vulnerable": true, "criteria": "cpe:2.3:a:php:php:*:*:*:*:*:*:*:*", "versionEndExcluding": "9.0" }] }] }]
+      }
+    },
+    {
+      "cve": {
+        "id": "CVE-2024-1111",
+        "published": "2024-01-01T00:00:00.000",
+        "lastModified": "2024-01-02T00:00:00.000",
+        "vulnStatus": "Analyzed",
+        "descriptions": [{ "lang": "en", "value": "A library that happens to match the virtual string but not the PHP interpreter." }],
+        "configurations": [{ "nodes": [{ "cpeMatch": [{ "vulnerable": true, "criteria": "cpe:2.3:a:php:pear:*:*:*:*:*:*:*:*", "versionEndExcluding": "1.10" }] }] }]
+      }
+    }
+  ]
+}

@@ -22,6 +22,13 @@
       "when": 1794073359323,
       "tag": "0002_drop_scan_detected",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794077139603,
+      "tag": "0003_intel_sources",
+      "breakpoints": true
     }
   ]
 }

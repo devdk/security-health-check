@@ -11,6 +11,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  primaryKey,
   smallint,
   text,
   timestamp,
@@ -346,6 +347,18 @@ export const pluginReports = pgTable(
 // ---------------------------------------------------------------------------
 // Vulnerability intelligence
 // ---------------------------------------------------------------------------
+export interface CopyrightNotice {
+  notice: string;
+  license: string;
+  licenseUrl: string;
+}
+
+export interface VulnCopyrights {
+  message?: string;
+  /** e.g. { defiant: {...}, mitre: {...} } */
+  holders: Record<string, CopyrightNotice>;
+}
+
 export interface AffectedRange {
   from?: string;
   fromInclusive?: boolean;
@@ -369,6 +382,15 @@ export const vulnCache = pgTable(
     affected: jsonb('affected').$type<AffectedRange[]>().notNull(),
     fixedIn: text('fixed_in'),
     references: jsonb('references').$type<FindingReference[]>().notNull().default([]),
+    /** Wordfence marks some records as having little or no real-world impact. */
+    informational: boolean('informational').notNull().default(false),
+    description: text('description'),
+    remediation: text('remediation'),
+    cwe: jsonb('cwe').$type<{ id: number; name: string } | null>(),
+    /** Link to the source's page for this record (required by Wordfence's licence). */
+    recordUrl: text('record_url'),
+    /** Copyright notices and licences that must be shown with this record. */
+    copyrights: jsonb('copyrights').$type<VulnCopyrights | null>(),
     publishedAt: timestamp('published_at', tz),
     updatedAt: timestamp('updated_at', tz),
     syncedAt: timestamp('synced_at', tz).notNull().defaultNow(),
@@ -377,6 +399,24 @@ export const vulnCache = pgTable(
     unique('vuln_cache_source_item_key').on(t.source, t.sourceId, t.softwareType, t.slug),
     index('vuln_cache_lookup_idx').on(t.softwareType, t.slug),
   ],
+);
+
+/**
+ * Latest-release information per piece of software, refreshed from WordPress.org.
+ * For core, `details` holds the version -> latest/outdated/insecure map.
+ */
+export const softwareReleases = pgTable(
+  'software_releases',
+  {
+    softwareType: softwareTypeEnum('software_type').notNull(),
+    slug: text('slug').notNull(),
+    latestVersion: text('latest_version'),
+    /** False when the source has no record (e.g. premium plugins not on WordPress.org). */
+    found: boolean('found').notNull().default(true),
+    details: jsonb('details').$type<Record<string, unknown>>(),
+    fetchedAt: timestamp('fetched_at', tz).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ name: 'software_releases_pkey', columns: [t.softwareType, t.slug] })],
 );
 
 export const vulnSyncRuns = pgTable(

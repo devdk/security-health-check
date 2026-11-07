@@ -1,4 +1,4 @@
-import { NetError, type Fetcher } from '@shc/net';
+import { NetError, type Fetcher, type TlsProbe } from '@shc/net';
 import { ONTOLOGY_VERSION, isExposureId } from '@shc/ontology';
 import { SEVERITIES } from '@shc/shared';
 import { ComponentStore } from './components';
@@ -6,7 +6,7 @@ import { snippet } from './html';
 import { ALL_MODULES } from './modules';
 import { BudgetExhaustedError, PoliteClient } from './polite-client';
 import type { RateLimiter } from './rate-limit';
-import type { CheckModule, ComponentFact, Finding, ScanContext, ScanLogger, ScanTarget, VulnLookup } from './types';
+import type { CheckModule, ComponentFact, Finding, ReleaseLookup, ScanContext, ScanLogger, ScanTarget, VulnLookup } from './types';
 
 export interface ModuleOutcome {
   module: string;
@@ -41,6 +41,10 @@ export interface RunScanOptions {
   fetcher: Fetcher;
   limiter: RateLimiter;
   vulns: VulnLookup;
+  /** Latest-release data; without it the outdated-software check finds nothing. */
+  releases?: ReleaseLookup;
+  /** HTTPS inspection; without it the tls check is recorded as failed. */
+  tlsProbe?: TlsProbe;
   maxRequests: number;
   timeoutMs: number;
   modules?: readonly CheckModule[];
@@ -48,6 +52,7 @@ export interface RunScanOptions {
 }
 
 const quietLog: ScanLogger = { debug() {}, info() {}, warn() {} };
+export const noReleases: ReleaseLookup = { coreStatus: async () => null, latestVersion: async () => null };
 
 /** Finds where the site actually lives: https first, then http, following on-site redirects. */
 async function resolveBaseUrl(http: PoliteClient, domain: string): Promise<string> {
@@ -95,6 +100,7 @@ export async function runScan(options: RunScanOptions): Promise<ScanOutcome> {
       domain: options.domain,
       maxRequests: options.maxRequests,
       signal: controller.signal,
+      tlsProbe: options.tlsProbe,
     });
     const baseUrl = await resolveBaseUrl(http, options.domain);
     const target: ScanTarget = { domain: options.domain, baseUrl };
@@ -105,7 +111,7 @@ export async function runScan(options: RunScanOptions): Promise<ScanOutcome> {
 
     const runOne = async (m: CheckModule): Promise<void> => {
       const started = Date.now();
-      const ctx: ScanContext = { http: http.forModule(m.id), components, vulns: options.vulns, log };
+      const ctx: ScanContext = { http: http.forModule(m.id), components, vulns: options.vulns, releases: options.releases ?? noReleases, log };
       let status: ModuleOutcome['status'] = 'ok';
       let note: string | undefined;
       let produced: Finding[] = [];

@@ -7,7 +7,7 @@ export * from './standards';
 export * from './vocabulary';
 
 /** Bump when concept ids are added, renamed or removed. Stored with each scan. */
-export const ONTOLOGY_VERSION = '2026.11.1';
+export const ONTOLOGY_VERSION = '2026.11.2';
 
 export type ConceptId = ExposureId | ComponentId | ControlId | RemediationId | WeaknessId | AttackPatternId;
 

@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ComponentStore } from '../src/components';
+import { noReleases } from '../src/engine';
 import { pluginsThemes, vulnMatch, wpDetect } from '../src/modules';
 import { PoliteClient } from '../src/polite-client';
 import { noRateLimit } from '../src/rate-limit';
@@ -13,7 +14,7 @@ const target = { domain: 'example.com', baseUrl: 'https://example.com' };
 function context(routes: Record<string, FixtureResponse>, vulns: VulnLookup = noVulns) {
   const fetcher = new FixtureFetcher(routes);
   const http = PoliteClient.create({ fetcher, limiter: noRateLimit, domain: 'example.com', maxRequests: 100 });
-  const ctx: ScanContext = { http, components: new ComponentStore(), vulns, log: silentLog };
+  const ctx: ScanContext = { http, components: new ComponentStore(), vulns, releases: noReleases, log: silentLog };
   return { ctx, fetcher, http };
 }
 

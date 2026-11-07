@@ -27,6 +27,12 @@ export interface FetchOptions {
   redirect?: RedirectPolicy;
   maxRedirects?: number;
   rejectUnauthorized?: boolean;
+  /**
+   * Awaited after DNS resolution and immediately before each request is sent: the place
+   * for a rate limiter, so its spacing applies to what the target actually receives.
+   * The timeout starts once this resolves.
+   */
+  beforeSend?: () => Promise<void>;
 }
 
 export interface SafeResponse {
@@ -40,6 +46,11 @@ export interface SafeResponse {
 }
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+
+interface Timing {
+  timeoutMs: number;
+  deadline: number | null;
+}
 
 function bareHost(hostname: string): string {
   return hostname.replace(/^\[|\]$/g, '').toLowerCase();
@@ -75,14 +86,15 @@ export class SafeFetcher {
   async fetch(input: string, options: FetchOptions = {}): Promise<SafeResponse> {
     const redirectPolicy = options.redirect ?? 'none';
     const maxRedirects = options.maxRedirects ?? 3;
-    const deadline = Date.now() + (options.timeoutMs ?? 10_000);
+    // With a beforeSend hook the clock starts when the first request is actually sent.
+    const timing = { timeoutMs: options.timeoutMs ?? 10_000, deadline: options.beforeSend ? null : Date.now() + (options.timeoutMs ?? 10_000) } as Timing;
 
     let url = this.parse(input);
     const origin = bareHost(url.hostname);
     const redirects: string[] = [];
 
     for (;;) {
-      const res = await this.request(url, options, deadline);
+      const res = await this.request(url, options, timing);
       const location = res.headers.location;
       if (redirectPolicy === 'none' || !REDIRECT_STATUSES.has(res.status) || !location) {
         return { ...res, redirects };
@@ -146,9 +158,11 @@ export class SafeFetcher {
     return addresses[0]!;
   }
 
-  private async request(url: URL, options: FetchOptions, deadline: number): Promise<Omit<SafeResponse, 'redirects'>> {
+  private async request(url: URL, options: FetchOptions, timing: Timing): Promise<Omit<SafeResponse, 'redirects'>> {
     const target = await this.resolve(url.hostname);
-    const remaining = deadline - Date.now();
+    if (options.beforeSend) await options.beforeSend();
+    timing.deadline ??= Date.now() + timing.timeoutMs;
+    const remaining = timing.deadline - Date.now();
     if (remaining <= 0) throw new NetError('timeout', 'The request timed out', url.toString());
 
     const method = options.method ?? 'GET';

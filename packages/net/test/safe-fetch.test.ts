@@ -111,6 +111,29 @@ describe('SafeFetcher', () => {
     expect(lookups).toEqual(['pinned.test']);
   });
 
+  it('takes the rate-limit slot after DNS, right before sending, and starts the timeout then', async () => {
+    const order: string[] = [];
+    const f = new SafeFetcher({
+      userAgent: UA,
+      allowPrivateHosts: ['site.test'],
+      allowedPorts: [port],
+      resolveHost: async (h) => {
+        order.push('dns');
+        return resolveHost(h);
+      },
+    });
+    const res = await f.fetch(url('site.test', '/ok'), {
+      timeoutMs: 200,
+      beforeSend: async () => {
+        order.push('slot');
+        await new Promise((r) => setTimeout(r, 400)); // longer than the timeout
+      },
+    });
+    expect(res.status).toBe(200);
+    expect(order).toEqual(['dns', 'slot']);
+    expect(hits).toHaveLength(1);
+  });
+
   describe('SSRF protection', () => {
     it('refuses names that resolve to private addresses, before connecting', async () => {
       await expectNetError(strict.fetch(url('evil.test', '/ok')), 'blocked_address');

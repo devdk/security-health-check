@@ -58,6 +58,14 @@ export interface Config {
     concurrency: number;
     timeoutSeconds: number;
   };
+  intel: {
+    /** Free key from wordfence.com → Account → Integrations. Without it the Wordfence feed is skipped. */
+    wordfenceApiKey: string | null;
+    /** Optional NVD key (raises the rate limit from 5 to 50 requests per 30 s). */
+    nvdApiKey: string | null;
+    /** Cron pattern (UTC) for the daily refresh. */
+    refreshCron: string;
+  };
 }
 
 export class ConfigError extends Error {
@@ -204,7 +212,17 @@ export function loadConfig(env: Env = process.env): Config {
       concurrency: r.int('SCAN_CONCURRENCY', 3, 1, 20),
       timeoutSeconds: r.int('SCAN_TIMEOUT_SECONDS', 300, 30, 1800),
     },
+    intel: {
+      wordfenceApiKey: env.WORDFENCE_API_KEY?.trim() || null,
+      nvdApiKey: env.NVD_API_KEY?.trim() || null,
+      refreshCron: r.string('INTEL_REFRESH_CRON', '17 3 * * *'),
+    },
   };
+
+  if (!/^(\S+\s+){4}\S+$/.test(config.intel.refreshCron)) r.problems.push('INTEL_REFRESH_CRON must be a 5-field cron pattern');
+  for (const [name, key] of [['WORDFENCE_API_KEY', config.intel.wordfenceApiKey], ['NVD_API_KEY', config.intel.nvdApiKey]] as const) {
+    if (key && !/^[\w.-]{16,512}$/.test(key)) r.problems.push(`${name} does not look like an API key`);
+  }
 
   if (!/SecurityHealthCheck/i.test(config.scanner.userAgent)) {
     r.problems.push('SCANNER_USER_AGENT must name the product (contain "SecurityHealthCheck")');

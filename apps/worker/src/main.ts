@@ -5,10 +5,11 @@ import { pino } from 'pino';
 import { ConfigError, loadConfig } from '@shc/config';
 import { markScanFailed, redisConnection, SCAN_QUEUE, type ScanJobData } from '@shc/core';
 import { createDb } from '@shc/db';
-import { createTxtResolver, OwnershipVerifier, SafeFetcher } from '@shc/net';
+import { DbReleaseLookup, DbVulnLookup } from '@shc/intel';
+import { createTxtResolver, OwnershipVerifier, SafeFetcher, TlsProber } from '@shc/net';
 import { RedisRateLimiter } from '@shc/scanner';
+import { startIntelJobs } from './intel-jobs';
 import { failStuckScans, processScan, type ProcessDeps } from './process-scan';
-import { DbVulnLookup } from './vulns';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -24,12 +25,18 @@ async function main(): Promise<void> {
     db: dbHandle.db,
     ownership: new OwnershipVerifier({ fetcher, resolveTxt: createTxtResolver({ servers: config.scanner.dnsResolvers }) }),
     fetcher,
-    // Shared through Redis, so all workers together stay under the per-site limit.
-    limiter: new RedisRateLimiter(redis, Math.ceil(1000 / config.scan.ratePerSecond)),
+    // Shared through Redis, so all workers together stay under the per-site limit. The
+    // 50 ms margin absorbs network jitter so the target never sees more than the promise.
+    limiter: new RedisRateLimiter(redis, Math.ceil(1000 / config.scan.ratePerSecond) + 50),
     vulns: new DbVulnLookup(dbHandle.db),
+    releases: new DbReleaseLookup(dbHandle.db),
+    // Same SSRF policy as HTTP: only vetted public addresses, pinned for the handshake.
+    tlsProbe: new TlsProber(fetcher),
     scan: config.scan,
     log,
   };
+
+  const intel = await startIntelJobs({ db: dbHandle.db, config, connection: redisConnection(config.redisUrl), log });
 
   const worker = new Worker<ScanJobData>(SCAN_QUEUE, async (job) => processScan(job.data.scanId, deps), {
     connection: redisConnection(config.redisUrl),
@@ -59,6 +66,7 @@ async function main(): Promise<void> {
     log.info({ signal }, 'shutting down');
     clearInterval(sweeper);
     await worker.close().catch(() => undefined);
+    await intel.close().catch(() => undefined);
     await redis.quit().catch(() => undefined);
     await dbHandle.close().catch(() => undefined);
     process.exit(0);

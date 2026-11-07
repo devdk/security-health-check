@@ -1,5 +1,6 @@
 import type { Confidence } from '@shc/shared';
 import { metaGenerators, referencedUrls, snippet } from '../html';
+import { HOMEPAGE_OPTIONS } from './common';
 import type { CheckModule, Finding } from '../types';
 import { isVersion } from '../version';
 
@@ -9,8 +10,6 @@ const CORE_VERSIONED_ASSETS = [
   /\/wp-includes\/js\/wp-emoji-release\.min\.js\?(?:[^"']*&)?ver=([0-9][^&"'#]*)/i,
   /\/wp-includes\/css\/dashicons(?:\.min)?\.css\?(?:[^"']*&)?ver=([0-9][^&"'#]*)/i,
 ];
-
-export const HOMEPAGE_OPTIONS = { followRedirects: true, maxBytes: 512 * 1024 } as const;
 
 /**
  * Confirms the site runs WordPress and works out the core version from the generator

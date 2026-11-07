@@ -112,6 +112,10 @@ services:
     restart: unless-stopped
     environment:
       <<: *node-env
+      # Only the worker gets the intel API keys (least privilege).
+      WORDFENCE_API_KEY: ${WORDFENCE_API_KEY:-}
+      NVD_API_KEY: ${NVD_API_KEY:-}
+      INTEL_REFRESH_CRON: ${INTEL_REFRESH_CRON:-17 3 * * *}
     depends_on:
       migrate:
         condition: service_completed_successfully

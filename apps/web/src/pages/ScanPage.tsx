@@ -9,7 +9,16 @@ const TYPE_LABEL = { core: 'WordPress core', plugin: 'Plugins', theme: 'Themes',
 const MODULE_LABEL: Record<string, string> = {
   'wp-detect': 'WordPress detection',
   'plugins-themes': 'Plugins and themes',
+  'php-version': 'PHP version',
+  'exposed-files': 'Exposed sensitive files',
+  'user-enum': 'Username exposure',
+  xmlrpc: 'XML-RPC',
+  'directory-listing': 'Directory listing',
+  tls: 'HTTPS and certificate',
+  headers: 'Security headers and cookies',
+  'admin-exposure': 'Login and admin exposure',
   'vuln-match': 'Known vulnerabilities',
+  'outdated-software': 'Outdated software',
 };
 const CONFIDENCE_HINT = {
   confirmed: 'Stated directly by the site',

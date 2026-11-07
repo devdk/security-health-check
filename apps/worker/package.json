@@ -5,14 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --env-file=../../.env src/main.ts",
-    "build": "node ../../scripts/build-app.mjs --outdir dist src/main.ts",
+    "build": "node ../../scripts/build-app.mjs --outdir dist src/main.ts src/cli-intel-sync.ts=intel-sync",
     "start": "node --enable-source-maps dist/main.js",
+    "intel:sync": "tsx --env-file=../../.env src/cli-intel-sync.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@shc/config": "0.1.0",
     "@shc/core": "0.1.0",
     "@shc/db": "0.1.0",
+    "@shc/intel": "0.1.0",
     "@shc/net": "0.1.0",
     "@shc/ontology": "0.1.0",
     "@shc/scanner": "0.1.0",

@@ -60,11 +60,23 @@ export interface VulnRecord {
   affected: Array<{ from?: string; fromInclusive?: boolean; to?: string; toInclusive?: boolean }>;
   fixedIn: string | null;
   references: Reference[];
+  /** Little or no real-world impact (Wordfence's classification). */
+  informational?: boolean;
+  /** Link to the source's record; shown with the finding for attribution. */
+  recordUrl?: string | null;
 }
 
 /** Read access to the local vulnerability cache. */
 export interface VulnLookup {
   forComponent(type: SoftwareType, slug: string): Promise<VulnRecord[]>;
+}
+
+export type CoreStatus = 'latest' | 'outdated' | 'insecure';
+
+/** Read access to latest-release data (WordPress.org), cached by the intel layer. */
+export interface ReleaseLookup {
+  coreStatus(version: string): Promise<{ status: CoreStatus; latest: string } | null>;
+  latestVersion(type: 'plugin' | 'theme', slug: string): Promise<string | null>;
 }
 
 export interface ScanLogger {
@@ -77,6 +89,7 @@ export interface ScanContext {
   http: PoliteClient;
   components: ComponentStore;
   vulns: VulnLookup;
+  releases: ReleaseLookup;
   log: ScanLogger;
 }
 

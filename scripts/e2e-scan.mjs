@@ -96,8 +96,27 @@ try {
   step('detected WordPress 6.4.2', by('core', 'wordpress')?.version === '6.4.2');
   step('detected Contact Form 7 5.3.1', by('plugin', 'contact-form-7')?.version === '5.3.1');
   step('detected the Twenty Twenty-One theme', by('theme', 'twentytwentyone')?.version === '2.0');
-  step('flagged the vulnerable plugin', scan.findingCounts.critical >= 1);
+  step('detected PHP 8.1.27 from headers', by('php', 'php')?.version === '8.1.27');
+  step('all twelve checks ran', scan.modules.length === 12 && scan.modules.every((m) => m.status === 'ok'), scan.modules.filter((m) => m.status !== 'ok').map((m) => `${m.module}=${m.status}`).join(', ') || 'all ok');
+  // Critical: sample CF7 record + the planted wp-config.php.bak backup.
+  step('flagged critical issues', scan.findingCounts.critical >= 2, JSON.stringify(scan.findingCounts));
   step('stayed under the request cap', scan.requestCount <= 150, String(scan.requestCount));
+
+  const concepts = psql(`select string_agg(distinct concept_id, ',' order by concept_id) from findings where scan_id = '${scan.id}'`).split(',');
+  for (const expected of [
+    'exposure/config-backup-exposed',
+    'exposure/debug-log-exposed',
+    'exposure/php-unsupported',
+    'exposure/xmlrpc-enabled',
+    'exposure/usernames-via-rest-api',
+    'exposure/https-not-enforced',
+    'exposure/wordpress-core-outdated',
+    'exposure/plugin-outdated',
+  ]) {
+    step(`found ${expected.replace('exposure/', '')}`, concepts.includes(expected));
+  }
+  const leaked = psql(`select count(*) from findings where scan_id = '${scan.id}' and (evidence::text like '%not-a-real-password%' or evidence::text like '%shc-admin%')`);
+  step('no secrets or full usernames stored in evidence', leaked === '0');
 
   // 5. Politeness, measured from the target's side: Apache's access log.
   const accessLog = compose('logs', 'testwp', '--no-log-prefix', '--since', scanStart);

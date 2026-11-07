@@ -53,7 +53,7 @@ export const EXPOSURES = {
     mitigatedBy: ['control/automatic-updates'],
     remediatedBy: ['remediation/update-wordpress-core', 'remediation/enable-auto-updates'],
     owasp: ['A06:2021'],
-    detectedBy: ['wp-detect'],
+    detectedBy: ['outdated-software'],
   }),
   'exposure/plugin-outdated': exposure({
     label: 'Plugin is out of date',
@@ -65,7 +65,7 @@ export const EXPOSURES = {
     mitigatedBy: ['control/automatic-updates'],
     remediatedBy: ['remediation/update-affected-component', 'remediation/enable-auto-updates'],
     owasp: ['A06:2021'],
-    detectedBy: ['plugins-themes', 'plugin'],
+    detectedBy: ['outdated-software', 'plugin'],
   }),
   'exposure/theme-outdated': exposure({
     label: 'Theme is out of date',
@@ -77,7 +77,7 @@ export const EXPOSURES = {
     mitigatedBy: ['control/automatic-updates'],
     remediatedBy: ['remediation/update-affected-component', 'remediation/enable-auto-updates'],
     owasp: ['A06:2021'],
-    detectedBy: ['plugins-themes', 'plugin'],
+    detectedBy: ['outdated-software', 'plugin'],
   }),
   'exposure/known-vulnerable-component': exposure({
     label: 'Software with a known vulnerability',

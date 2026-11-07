@@ -2,7 +2,40 @@
 
 An attacker's-eye security audit for WordPress sites. Owners add a site, prove they own it, and get a scored security report. A companion WordPress plugin adds an inside-view audit.
 
-> **Status: Phase 3.** Done: scaffold, auth, site management, ownership verification, the security ontology, the scan queue and worker, and the first three checks (WordPress detection, plugins and themes, known vulnerabilities). Reports, scoring and the remaining checks come next. A full README follows in the hardening phase.
+> **Status: Phase 4.** Done: scaffold, auth, site management, ownership verification, the security ontology, the scan queue and worker, all external checks, and the vulnerability intelligence cache with a daily refresh. Reports, scoring and free/paid visibility come next. A full README follows in the hardening phase.
+
+## Vulnerability intelligence
+
+The worker refreshes a local cache once a day (`INTEL_REFRESH_CRON`, default 03:17 UTC), and also at startup when the cache is empty or more than a day old. Each source sits behind an adapter in `packages/intel`:
+
+| Source | Used for | Notes |
+|---|---|---|
+| **Wordfence Intelligence** (v3 production feed) | WordPress core, plugin and theme vulnerabilities | Free for commercial use. **Needs a free API key** in `WORDFENCE_API_KEY` (wordfence.com → Account → Integrations); skipped until set. Attribution (record link, Defiant and MITRE copyright notices) is stored with every record for the reports. |
+| **NVD** CVE API 2.0 | PHP runtime vulnerabilities (`cpe:2.3:a:php:php`) | Free; `NVD_API_KEY` optional (raises the rate limit). Display "uses data from the NVD API but is not endorsed or certified by the NVD". |
+| **WordPress.org** APIs | Latest core release and the status of every version; latest plugin and theme versions | Core is refreshed daily. Plugins and themes are looked up on first sight and cached for a day. |
+| **OSV** | – | Adapter slot only: OSV has no WordPress or PHP-runtime data, and some of its sources are non-commercial. |
+| **php.net** support dates | PHP end-of-life | Kept in code (`packages/scanner/src/data/php-branches.ts`); a test fails when a new branch is due. |
+
+Run the refresh by hand with `npm run intel:sync -w @shc/worker`.
+
+## Checks
+
+| Module | Looks for | Requests |
+|---|---|---|
+| wp-detect | WordPress and its version (generator tag, feed, core assets) | 2 |
+| plugins-themes | Plugins and themes, with versions from readme.txt and style.css | 1 per item (up to 30 plugins) |
+| php-version | PHP version and end of life (from response headers); web server | 0 (reuses the home page) |
+| exposed-files | wp-config backups, .env, .git, SQL dumps, archives, debug.log, phpinfo | HEAD per path; a 4 KB GET only when it exists |
+| user-enum | Usernames via the REST API and author archives | ≤ 4 |
+| xmlrpc | A live xmlrpc.php (GET only, never POST) | 1 |
+| directory-listing | Open folder listings in wp-content and wp-includes | 4 |
+| tls | Certificate validity, expiry, trust, hostname; TLS 1.0/1.1; HTTP→HTTPS redirect | ≤ 3 |
+| headers | HSTS, CSP, frame protection, nosniff, Referrer-Policy, Permissions-Policy, session cookie flags | 0–1 |
+| admin-exposure | An open login page with no visible protection (never attempts a login) | ≤ 2 |
+| vuln-match | Detected versions against the vulnerability cache (PHP CVEs grouped) | 0 |
+| outdated-software | Detected versions against WordPress.org's latest releases | 0 to the site |
+
+Evidence never stores file contents, cookie values or full usernames. The rate-limit slot is taken after DNS resolution and immediately before each request is sent, with a 50 ms margin, so the target sees at most 2 requests per second. The end-to-end script verifies this against the test site's access log.
 
 ## How a scan works
 
@@ -24,7 +57,7 @@ dashboard ──POST /api/sites/:id/scans──▶ API ──(re-verify ownershi
 
 ## Local test WordPress (end-to-end)
 
-A deliberately outdated WordPress (6.4.2 with Contact Form 7 5.3.1, CVE-2020-35489) runs under a separate compose profile. Its updates are disabled, it is published on 127.0.0.1 only, and the scanner reaches it as `http://wordpress.test`.
+A deliberately outdated WordPress (6.4.2 on PHP 8.1, with Contact Form 7 5.3.1 (CVE-2020-35489), a leftover `wp-config.php.bak` holding fake values, and a public `debug.log`) runs under a separate compose profile. Its updates are disabled, it is published on 127.0.0.1 only, and the scanner reaches it as `http://wordpress.test`.
 
 ```bash
 docker compose --profile testwp up -d
@@ -123,6 +156,7 @@ packages/db     Drizzle schema, generated SQL migrations, DB client
 packages/net    SSRF-safe HTTP client, IP policy, DNS, ownership checks
 packages/ontology  Security ontology: exposures, CWE/CAPEC mappings, controls, remediations, JSON-LD export
 packages/scanner   Scan engine, polite HTTP client, rate limiter, check modules, recorded fixtures
+packages/intel     Vulnerability source adapters (Wordfence, NVD, OSV slot), WordPress.org release data, sync jobs
 packages/shared Domain constants and validation shared by every app (incl. the browser)
 docker/         Dockerfiles and nginx config
 scripts/        Build and setup helpers

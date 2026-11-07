@@ -1,7 +1,7 @@
 import { fileHeaders, referencedUrls, wpContentRefs } from '../html';
 import type { CheckModule, ComponentFact, Finding } from '../types';
 import { isVersion } from '../version';
-import { HOMEPAGE_OPTIONS } from './wp-detect';
+import { HOMEPAGE_OPTIONS } from './common';
 
 /** Upper bound on plugins we look up per scan, to keep request counts predictable. */
 export const MAX_PLUGINS = 30;

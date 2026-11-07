@@ -15,6 +15,345 @@
       },
       "bodyFile": "01-home.txt"
     },
+    "http://wordpress.test/wp-config.php.bak": {
+      "status": 200,
+      "headers": {
+        "content-type": "application/x-trash",
+        "server": "Apache/2.4.57 (Debian)"
+      },
+      "bodyFile": "02-wp-config-php-bak.txt"
+    },
+    "http://wordpress.test/wp-config.php.old": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-config.php.orig": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-config.php.save": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-config.php~": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-config.php.txt": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-config.bak": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-config.old": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-config.txt": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/.wp-config.php.swp": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-config.php.swp": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/.env": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/.env.backup": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/.git/HEAD": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/backup.sql": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/database.sql": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/db.sql": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/dump.sql": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wordpress.sql": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp.sql": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wordpress.test.sql": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/backup.zip": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/site.zip": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wordpress.zip": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/www.zip": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/public_html.zip": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wordpress.test.zip": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/backup.tar.gz": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-content/debug.log": {
+      "status": 200,
+      "headers": {
+        "server": "Apache/2.4.57 (Debian)"
+      },
+      "bodyFile": "03-wp-content-debug-log.txt"
+    },
+    "http://wordpress.test/debug.log": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/phpinfo.php": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/info.php": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/php_info.php": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/test.php": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-json/wp/v2/users": {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      },
+      "bodyFile": "04-wp-json-wp-v2-users.txt"
+    },
+    "http://wordpress.test/xmlrpc.php": {
+      "status": 405,
+      "headers": {
+        "content-type": "text/plain;charset=UTF-8",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      },
+      "bodyFile": "05-xmlrpc-php.txt"
+    },
+    "http://wordpress.test/wp-content/uploads/": {
+      "status": 403,
+      "headers": {
+        "content-type": "text/html; charset=iso-8859-1",
+        "server": "Apache/2.4.57 (Debian)"
+      },
+      "bodyFile": "06-wp-content-uploads.txt"
+    },
+    "http://wordpress.test/wp-login.php": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      },
+      "bodyFile": "07-wp-login-php.txt"
+    },
     "http://wordpress.test/feed/": {
       "status": 200,
       "headers": {
@@ -23,7 +362,7 @@
         "server": "Apache/2.4.57 (Debian)",
         "x-powered-by": "PHP/8.1.27"
       },
-      "bodyFile": "02-feed.txt"
+      "bodyFile": "08-feed.txt"
     },
     "http://wordpress.test/wp-content/plugins/contact-form-7/readme.txt": {
       "status": 200,
@@ -31,7 +370,33 @@
         "content-type": "text/plain",
         "server": "Apache/2.4.57 (Debian)"
       },
-      "bodyFile": "03-wp-content-plugins-contact-form-7-readme-txt.txt"
+      "bodyFile": "09-wp-content-plugins-contact-form-7-readme-txt.txt"
+    },
+    "http://wordpress.test/?author=1": {
+      "status": 301,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "location": "http://wordpress.test/author/shc-admin/",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-content/plugins/": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-admin/": {
+      "status": 302,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "location": "http://wordpress.test/wp-login.php?redirect_to=http%3A%2F%2Fwordpress.test%2Fwp-admin%2F&reauth=1",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
     },
     "http://wordpress.test/wp-content/themes/twentytwentyone/style.css": {
       "status": 200,
@@ -39,7 +404,33 @@
         "content-type": "text/css",
         "server": "Apache/2.4.57 (Debian)"
       },
-      "bodyFile": "04-wp-content-themes-twentytwentyone-style-css.txt"
+      "bodyFile": "10-wp-content-themes-twentytwentyone-style-css.txt"
+    },
+    "http://wordpress.test/?author=2": {
+      "status": 404,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      },
+      "bodyFile": "11-home.txt"
+    },
+    "http://wordpress.test/wp-content/themes/": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      }
+    },
+    "http://wordpress.test/wp-includes/": {
+      "status": 403,
+      "headers": {
+        "content-type": "text/html; charset=iso-8859-1",
+        "server": "Apache/2.4.57 (Debian)"
+      },
+      "bodyFile": "12-wp-includes.txt"
     }
   }
 }

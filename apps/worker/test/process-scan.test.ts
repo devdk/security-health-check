@@ -3,10 +3,10 @@ import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { auditEvents, createDb, findings, scans, siteComponents, sites, users, vulnCache, type DbHandle } from '@shc/db';
 import type { OwnershipChecker, OwnershipResult } from '@shc/net';
-import { noRateLimit } from '@shc/scanner';
-import { FixtureFetcher, loadFixture, silentLog } from '@shc/scanner/testing';
+import { noRateLimit, pluginsThemes, vulnMatch, wpDetect } from '@shc/scanner';
+import { FakeTlsProbe, FixtureFetcher, goodTls, loadFixture, silentLog } from '@shc/scanner/testing';
 import { failStuckScans, processScan, type ProcessDeps } from '../src/process-scan';
-import { DbVulnLookup } from '../src/vulns';
+import { DbVulnLookup } from '@shc/intel';
 import { workerTestDbUrl } from './global-setup';
 
 const fixtureDir = path.resolve(import.meta.dirname, '../../../packages/scanner/test/fixtures/wp-classic');
@@ -33,6 +33,9 @@ function deps(overrides: Partial<ProcessDeps> = {}): ProcessDeps {
     fetcher,
     limiter: noRateLimit,
     vulns: new DbVulnLookup(handle.db),
+    // The detailed assertions below are about the first three checks; the full set is
+    // covered by the scanner package and the end-to-end script.
+    modules: [wpDetect, pluginsThemes, vulnMatch],
     scan: { maxRequests: 150, ratePerSecond: 2, cooldownMinutes: 0, concurrency: 1, timeoutSeconds: 30 },
     log,
     ...overrides,
@@ -141,6 +144,20 @@ describe('processScan', () => {
     expect(await processScan(scan.id, deps())).toBe('failed');
     const [saved] = await handle.db.select().from(scans).where(eq(scans.id, scan.id));
     expect(saved!.error).toMatch(/couldn't reach example\.com/);
+  });
+
+  it('runs the full set of checks and stores every finding with its ontology text', async () => {
+    const { scan } = await queuedScan();
+    const result = await processScan(scan.id, deps({ modules: undefined, tlsProbe: new FakeTlsProbe({ 'example.com': { inspection: goodTls('example.com') } }) }));
+    expect(result).toBe('completed');
+    const [saved] = await handle.db.select().from(scans).where(eq(scans.id, scan.id));
+    expect(saved!.moduleResults).toHaveLength(12);
+    expect(saved!.moduleResults!.every((m) => m.status === 'ok')).toBe(true);
+    const rows = await handle.db.select().from(findings).where(eq(findings.scanId, scan.id));
+    expect(rows.length).toBeGreaterThan(3);
+    expect(rows.every((f) => f.explanation.length > 20 && f.fixSteps.includes('**'))).toBe(true);
+    const php = await handle.db.select().from(siteComponents).where(eq(siteComponents.scanId, scan.id));
+    expect(php.map((c) => c.softwareType)).toContain('web_server');
   });
 
   it('only processes a scan once', async () => {

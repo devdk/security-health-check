@@ -1,0 +1,97 @@
+{
+  "6a2e5d1c-1111-4b6e-9a0e-000000000001": {
+    "id": "6a2e5d1c-1111-4b6e-9a0e-000000000001",
+    "title": "Contact Form 7 <= 5.3.1 - Unrestricted File Upload",
+    "software": [
+      {
+        "type": "plugin",
+        "name": "Contact Form 7",
+        "slug": "contact-form-7",
+        "affected_versions": { "* - 5.3.1": { "from_version": "*", "from_inclusive": true, "to_version": "5.3.1", "to_inclusive": true } },
+        "patched": true,
+        "patched_versions": ["5.3.2"],
+        "remediation": "Update to version 5.3.2, or a newer patched version"
+      }
+    ],
+    "informational": false,
+    "description": "The plugin does not sanitise uploaded file names, allowing a double-extension upload.",
+    "references": ["https://www.wordfence.com/threat-intel/vulnerabilities/id/6a2e5d1c-1111-4b6e-9a0e-000000000001", "https://www.cve.org/CVERecord?id=CVE-2020-35489"],
+    "cwe": { "id": 434, "name": "Unrestricted Upload of File with Dangerous Type", "description": "…" },
+    "cvss": { "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "score": 9.8, "rating": "Critical" },
+    "cve": "CVE-2020-35489",
+    "cve_link": "https://www.cve.org/CVERecord?id=CVE-2020-35489",
+    "researchers": ["A. Researcher"],
+    "published": "2020-12-17 00:00:00",
+    "updated": "2024-01-22 18:46:19",
+    "copyrights": {
+      "message": "This record contains material that is subject to copyright",
+      "defiant": {
+        "notice": "Copyright 2012-2024 Defiant Inc.",
+        "license": "Defiant hereby grants you a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, sublicense, and distribute this software vulnerability information. Any copy of the software vulnerability information you make for such purposes is authorized provided that you, include a hyperlink to this vulnerability record, and reproduce Defiant's copyright designation and this license in any such copy.",
+        "license_url": "https://www.wordfence.com/wti-community-edition-terms-and-conditions/"
+      },
+      "mitre": {
+        "notice": "Copyright 1999-2024 The MITRE Corporation",
+        "license": "CVE Usage: MITRE hereby grants you a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, sublicense, and distribute Common Vulnerabilities and Exposures (CVE®). Any copy you make for such purposes is authorized provided that you reproduce MITRE's copyright designation and this license in any such copy.",
+        "license_url": "https://www.cve.org/Legal/TermsOfUse"
+      }
+    }
+  },
+  "6a2e5d1c-2222-4b6e-9a0e-000000000002": {
+    "id": "6a2e5d1c-2222-4b6e-9a0e-000000000002",
+    "title": "WordPress Core 6.4 - 6.4.2 - Example Core Issue",
+    "software": [
+      {
+        "type": "core",
+        "name": "WordPress",
+        "slug": "wordpress",
+        "affected_versions": { "[6.4, 6.4.3)": { "from_version": "6.4", "from_inclusive": true, "to_version": "6.4.3", "to_inclusive": false } },
+        "patched": true,
+        "patched_versions": ["6.4.3"],
+        "remediation": "Update to version 6.4.3"
+      }
+    ],
+    "informational": false,
+    "description": "Example core vulnerability for tests.",
+    "references": ["https://www.wordfence.com/threat-intel/vulnerabilities/id/6a2e5d1c-2222-4b6e-9a0e-000000000002"],
+    "cwe": null,
+    "cvss": { "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N", "score": 5.4, "rating": "Medium" },
+    "cve": null,
+    "cve_link": null,
+    "researchers": [],
+    "published": "2024-01-30 00:00:00",
+    "updated": "2024-02-01 10:00:00",
+    "copyrights": {
+      "message": "This record contains material that is subject to copyright",
+      "defiant": { "notice": "Copyright 2012-2024 Defiant Inc.", "license": "Defiant hereby grants you a licence (abbreviated for tests).", "license_url": "https://www.wordfence.com/wti-community-edition-terms-and-conditions/" }
+    }
+  },
+  "6a2e5d1c-3333-4b6e-9a0e-000000000003": {
+    "id": "6a2e5d1c-3333-4b6e-9a0e-000000000003",
+    "title": "Shared Library - Issue in a plugin and a theme",
+    "software": [
+      { "type": "plugin", "name": "Example Plugin", "slug": "example-plugin", "affected_versions": { "1.0 - 1.2": { "from_version": "1.0", "from_inclusive": true, "to_version": "1.2", "to_inclusive": true } }, "patched": false, "patched_versions": [], "remediation": "No known patch available" },
+      { "type": "theme", "name": "Example Theme", "slug": "example-theme", "affected_versions": { "* - 2.0": { "from_version": "*", "from_inclusive": true, "to_version": "2.0", "to_inclusive": true } }, "patched": true, "patched_versions": ["2.1", "2.0.1"], "remediation": "Update" }
+    ],
+    "informational": true,
+    "description": "Informational example.",
+    "references": ["https://www.wordfence.com/threat-intel/vulnerabilities/id/6a2e5d1c-3333-4b6e-9a0e-000000000003"],
+    "cwe": null,
+    "cvss": null,
+    "cve": null,
+    "cve_link": null,
+    "researchers": [],
+    "published": null,
+    "updated": "2024-03-01 00:00:00",
+    "copyrights": null
+  },
+  "not-a-uuid": { "id": "not-a-uuid", "title": "Malformed record", "software": [] },
+  "6a2e5d1c-4444-4b6e-9a0e-000000000004": {
+    "id": "6a2e5d1c-4444-4b6e-9a0e-000000000004",
+    "title": "Unknown software type is skipped",
+    "software": [{ "type": "mu-plugin", "name": "X", "slug": "x", "affected_versions": { "*": { "from_version": "*", "from_inclusive": true, "to_version": "*", "to_inclusive": true } }, "patched": false, "patched_versions": [] }],
+    "informational": false,
+    "references": [],
+    "published": "2024-01-01 00:00:00"
+  }
+}

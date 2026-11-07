@@ -2,8 +2,8 @@ import { and, eq, lt, or, sql } from 'drizzle-orm';
 import type { Config } from '@shc/config';
 import { audit, ensureFreshVerification, markScanFailed } from '@shc/core';
 import { scans, sites, type Database } from '@shc/db';
-import type { Fetcher, OwnershipChecker } from '@shc/net';
-import { runScan, ScanError, type CheckModule, type RateLimiter, type ScanLogger, type VulnLookup } from '@shc/scanner';
+import type { Fetcher, OwnershipChecker, TlsProbe } from '@shc/net';
+import { runScan, ScanError, type CheckModule, type RateLimiter, type ReleaseLookup, type ScanLogger, type VulnLookup } from '@shc/scanner';
 import { saveOutcome } from './persist';
 
 export interface ProcessDeps {
@@ -12,6 +12,8 @@ export interface ProcessDeps {
   fetcher: Fetcher;
   limiter: RateLimiter;
   vulns: VulnLookup;
+  releases?: ReleaseLookup;
+  tlsProbe?: TlsProbe;
   scan: Config['scan'];
   log: ScanLogger & { error(obj: object, msg?: string): void };
   modules?: readonly CheckModule[];
@@ -59,6 +61,8 @@ export async function processScan(scanId: string, deps: ProcessDeps): Promise<Pr
       fetcher: deps.fetcher,
       limiter: deps.limiter,
       vulns: deps.vulns,
+      releases: deps.releases,
+      tlsProbe: deps.tlsProbe,
       maxRequests: deps.scan.maxRequests,
       timeoutMs: deps.scan.timeoutSeconds * 1000,
       modules: deps.modules,

@@ -40,4 +40,15 @@ wp theme auto-updates disable --all >/dev/null 2>&1 || true
 
 wp rewrite structure '/%postname%/' --hard >/dev/null
 
+# Deliberate mistakes for the scanner to find. Dummy contents only: no real secrets.
+cat > /var/www/html/wp-config.php.bak <<'EOF'
+<?php
+// Leftover backup created for end-to-end tests. Values are fake.
+define( 'DB_NAME', 'wordpress' );
+define( 'DB_USER', 'wordpress' );
+define( 'DB_PASSWORD', 'not-a-real-password' );
+EOF
+printf '[08-Nov-2026 10:00:00 UTC] PHP Warning:  Undefined variable $example in /var/www/html/wp-content/themes/example.php on line 3\n' > /var/www/html/wp-content/debug.log
+mkdir -p /var/www/html/wp-content/uploads/2026/11
+
 echo "Test WordPress ready: WordPress $(wp core version), Contact Form 7 $(wp plugin get contact-form-7 --field=version)"

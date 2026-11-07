@@ -1,4 +1,4 @@
-import type { Fetcher, SafeResponse } from '@shc/net';
+import type { Fetcher, SafeResponse, TlsInspection, TlsProbe } from '@shc/net';
 import type { RateLimiter } from './rate-limit';
 
 export class BudgetExhaustedError extends Error {
@@ -30,6 +30,7 @@ export interface PoliteResponse extends SafeResponse {
 
 interface SharedState {
   readonly fetcher: Fetcher;
+  readonly tlsProbe?: TlsProbe;
   readonly limiter: RateLimiter;
   readonly maxRequests: number;
   readonly scope: Set<string>;
@@ -64,12 +65,14 @@ export class PoliteClient {
     domain: string;
     maxRequests: number;
     signal?: AbortSignal;
+    tlsProbe?: TlsProbe;
   }): PoliteClient {
     const domain = options.domain.toLowerCase();
     const apex = domain.startsWith('www.') ? domain.slice(4) : domain;
     return new PoliteClient(
       {
         fetcher: options.fetcher,
+        tlsProbe: options.tlsProbe,
         limiter: options.limiter,
         maxRequests: options.maxRequests,
         scope: new Set([apex, `www.${apex}`]),
@@ -117,6 +120,36 @@ export class PoliteClient {
     return this.request(url, { ...options, method: 'HEAD' });
   }
 
+  /** TLS handshakes are connections to the site too: same scope, budget and rate limit. */
+  async tlsInspect(host: string): Promise<TlsInspection> {
+    return this.tlsProbeFor(host).inspect(host, { beforeConnect: this.slot });
+  }
+
+  async tlsAcceptsLegacy(host: string): Promise<boolean> {
+    return this.tlsProbeFor(host).acceptsLegacyTls(host, { beforeConnect: this.slot });
+  }
+
+  private tlsProbeFor(host: string): TlsProbe {
+    const s = this.shared;
+    if (!s.scope.has(host.toLowerCase())) throw new OutOfScopeError(`tls://${host}`);
+    if (!s.tlsProbe) throw new Error('TLS probing is not configured');
+    this.consume();
+    return s.tlsProbe;
+  }
+
+  /**
+   * Waits for this target's next rate-limit slot. Called by the fetcher after DNS
+   * resolution and right before sending, so the spacing holds at the target's end.
+   */
+  private readonly slot = (): Promise<void> => this.shared.limiter.acquire(this.shared.rateKey, this.shared.signal);
+
+  private consume(): void {
+    const s = this.shared;
+    if (s.used >= s.maxRequests) throw new BudgetExhaustedError(s.maxRequests);
+    s.used += 1;
+    if (this.moduleId) s.perModule.set(this.moduleId, (s.perModule.get(this.moduleId) ?? 0) + 1);
+  }
+
   private request(url: string, options: PoliteRequestOptions): Promise<PoliteResponse> {
     if (!this.inScope(url)) return Promise.reject(new OutOfScopeError(url));
     if (options.method === 'HEAD') return this.send(url, options);
@@ -136,16 +169,13 @@ export class PoliteClient {
     let current = url;
 
     for (let hop = 0; ; hop++) {
-      if (s.used >= s.maxRequests) throw new BudgetExhaustedError(s.maxRequests);
-      s.used += 1;
-      if (this.moduleId) s.perModule.set(this.moduleId, (s.perModule.get(this.moduleId) ?? 0) + 1);
-
-      await s.limiter.acquire(s.rateKey, s.signal);
+      this.consume();
       const res = await s.fetcher.fetch(current, {
         method: options.method ?? 'GET',
         maxBytes: options.maxBytes ?? 256 * 1024,
         timeoutMs: options.timeoutMs ?? 15_000,
         redirect: 'none',
+        beforeSend: this.slot,
       });
 
       const location = typeof res.headers.location === 'string' ? res.headers.location : undefined;
