@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { api, errorMessage, type Site, type VerifyMethod } from '../api';
+import { api, errorMessage, type ScanSummary, type Site, type VerifyMethod } from '../api';
+import { isActive, ScanStatusBadge, SeverityCounts, usePolling } from '../components/scans';
 import { CopyField, formatDate, StatusBadge } from '../components/sites';
 import { Alert } from '../components/ui';
 
@@ -71,14 +72,7 @@ export function SiteDetailPage() {
         <VerifyPanel site={site} onUpdate={setSite} />
       )}
 
-      <section className="card">
-        <h2>Scans</h2>
-        <p className="muted">
-          {site.status === 'unverified'
-            ? 'Verify ownership first. We never scan a site until its owner has proved control of it.'
-            : 'Scanning arrives in the next build phase.'}
-        </p>
-      </section>
+      <ScansPanel site={site} />
 
       <section className="card danger-zone">
         <h2>Remove site</h2>
@@ -88,6 +82,63 @@ export function SiteDetailPage() {
         </button>
       </section>
     </div>
+  );
+}
+
+function ScansPanel({ site }: { site: Site }) {
+  const navigate = useNavigate();
+  const [scans, setScans] = useState<ScanSummary[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    api<{ scans: ScanSummary[] }>(`/sites/${site.id}/scans`)
+      .then((res) => setScans(res.scans))
+      .catch((err) => setError(errorMessage(err)));
+  }, [site.id]);
+
+  useEffect(load, [load]);
+  usePolling(scans?.some((s) => isActive(s.status)) ?? false, load);
+
+  async function start() {
+    setBusy(true);
+    setError(null);
+    try {
+      const { scan } = await api<{ scan: ScanSummary }>(`/sites/${site.id}/scans`, { method: 'POST', body: {} });
+      navigate(`/scans/${scan.id}`);
+    } catch (err) {
+      setError(errorMessage(err));
+      setBusy(false);
+    }
+  }
+
+  const canScan = site.status !== 'unverified';
+  const running = scans?.some((s) => isActive(s.status)) ?? false;
+
+  return (
+    <section className="card">
+      <div className="section-header">
+        <h2>Scans</h2>
+        <button type="button" className="btn btn-primary" onClick={start} disabled={!canScan || busy || running}>
+          {busy ? 'Starting…' : running ? 'Scan in progress' : 'Run a scan'}
+        </button>
+      </div>
+      {!canScan && <p className="muted">Verify ownership first. We never scan a site until its owner has proved control of it.</p>}
+      {error && <Alert tone="error">{error}</Alert>}
+      {scans && scans.length === 0 && canScan && <p className="muted">No scans yet. A scan takes a minute or two and only reads public pages.</p>}
+      {scans && scans.length > 0 && (
+        <ul className="scan-list">
+          {scans.map((s) => (
+            <li key={s.id} className="scan-row">
+              <Link to={`/scans/${s.id}`}>{formatDate(s.createdAt)}</Link>
+              <ScanStatusBadge status={s.status} />
+              {s.status === 'completed' && <SeverityCounts counts={s.findingCounts} />}
+              {s.status === 'failed' && s.error && <span className="muted small">{s.error}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

@@ -54,6 +54,22 @@ describe('loadConfig', () => {
     expect(config.web.allowedOrigins).toEqual(['http://localhost:5173', 'http://localhost:8080', 'https://staging.example.com']);
   });
 
+  it('never allows more than 2 requests per second per scanned site', () => {
+    expect(loadConfig(base).scan.ratePerSecond).toBe(2);
+    expect(() => loadConfig({ ...base, SCAN_RATE_PER_SECOND: '5' })).toThrow(/SCAN_RATE_PER_SECOND/);
+  });
+
+  it('requires the scanner User-Agent to name the product', () => {
+    expect(loadConfig(base).scanner.userAgent).toMatch(/^SecurityHealthCheck\//);
+    expect(() => loadConfig({ ...base, SCANNER_USER_AGENT: 'Mozilla/5.0' })).toThrow(/must name the product/);
+  });
+
+  it('refuses private-host allowances in production', () => {
+    expect(() =>
+      loadConfig({ ...base, NODE_ENV: 'production', WEB_BASE_URL: 'https://app.example.com', SCAN_ALLOW_PRIVATE_HOSTS: 'wordpress.test' }),
+    ).toThrow(/SCAN_ALLOW_PRIVATE_HOSTS/);
+  });
+
   it('returns a frozen object', () => {
     expect(Object.isFrozen(loadConfig(base))).toBe(true);
   });

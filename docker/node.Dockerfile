@@ -11,6 +11,8 @@ COPY packages/config/package.json packages/config/
 COPY packages/db/package.json packages/db/
 COPY packages/net/package.json packages/net/
 COPY packages/core/package.json packages/core/
+COPY packages/ontology/package.json packages/ontology/
+COPY packages/scanner/package.json packages/scanner/
 COPY apps/api/package.json apps/api/
 COPY apps/worker/package.json apps/worker/
 COPY apps/web/package.json apps/web/

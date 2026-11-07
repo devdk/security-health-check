@@ -12,9 +12,12 @@ import { registerSecurity } from './plugins/security';
 import { registerSession } from './plugins/session';
 import { authRoutes } from './routes/auth';
 import { healthRoutes } from './routes/health';
+import { scanRoutes, siteScanRoutes } from './routes/scans';
 import { siteRoutes } from './routes/sites';
 import { AuthService } from './services/auth-service';
+import { ScanService } from './services/scan-service';
 import { SiteService } from './services/site-service';
+import { BullScanQueue, redisConnection, type ScanQueue } from '@shc/core';
 import { SessionService } from './services/session-service';
 import { UserTokenService } from './services/user-token-service';
 
@@ -26,6 +29,8 @@ export interface AppDeps {
   mailer?: Mailer;
   /** Defaults to real DNS + SSRF-safe HTTP checks. Tests inject a fake. */
   ownership?: OwnershipChecker;
+  /** Defaults to the BullMQ queue in Redis. Tests inject a fake. */
+  scanQueue?: ScanQueue;
   logger?: FastifyServerOptions['logger'];
 }
 
@@ -61,6 +66,9 @@ export async function buildApp(deps: AppDeps) {
       resolveTxt: createTxtResolver({ servers: config.scanner.dnsResolvers }),
     });
   const siteService = new SiteService({ db, ownership, allowHosts: config.scanner.allowPrivateHosts });
+  const scanQueue = deps.scanQueue ?? new BullScanQueue(redisConnection(config.redisUrl));
+  if (!deps.scanQueue) app.addHook('onClose', () => scanQueue.close());
+  const scanService = new ScanService({ db, ownership, queue: scanQueue, cooldownMinutes: config.scan.cooldownMinutes });
 
   const cookies = await registerSession(app, config, sessions);
   await registerRateLimit(app, config, redis);
@@ -68,6 +76,8 @@ export async function buildApp(deps: AppDeps) {
   await app.register(healthRoutes, { prefix: '/api', db, redis });
   await app.register(authRoutes, { prefix: '/api/auth', config, auth, sessions, cookies });
   await app.register(siteRoutes, { prefix: '/api/sites', sites: siteService });
+  await app.register(siteScanRoutes, { prefix: '/api/sites', scans: scanService });
+  await app.register(scanRoutes, { prefix: '/api/scans', scans: scanService });
 
   return app;
 }

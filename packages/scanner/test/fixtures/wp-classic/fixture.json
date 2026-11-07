@@ -1,0 +1,21 @@
+{
+  "description": "Hand-made from typical WordPress 6.4.2 output: Astra child theme, Contact Form 7 5.3.1, WooCommerce 8.2.1, Elementor 3.17.3 (readme blocked).",
+  "origin": "https://example.com",
+  "routes": {
+    "/": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<https://example.com/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "nginx"
+      },
+      "bodyFile": "home.html"
+    },
+    "/feed/": { "status": 200, "headers": { "content-type": "application/rss+xml; charset=UTF-8" }, "bodyFile": "feed.xml" },
+    "/wp-content/plugins/contact-form-7/readme.txt": { "status": 200, "headers": { "content-type": "text/plain" }, "bodyFile": "cf7-readme.txt" },
+    "/wp-content/plugins/woocommerce/readme.txt": { "status": 200, "headers": { "content-type": "text/plain" }, "bodyFile": "woocommerce-readme.txt" },
+    "/wp-content/plugins/elementor/readme.txt": { "status": 403, "body": "<html><body>403 Forbidden</body></html>" },
+    "/wp-content/themes/astra-child/style.css": { "status": 200, "headers": { "content-type": "text/css" }, "bodyFile": "astra-child-style.css" },
+    "/wp-content/themes/astra/style.css": { "status": 200, "headers": { "content-type": "text/css" }, "bodyFile": "astra-style.css" }
+  }
+}

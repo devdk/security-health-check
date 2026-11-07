@@ -19,6 +19,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import {
+  CONFIDENCES,
   PLANS,
   SCAN_KINDS,
   SCAN_STATUSES,
@@ -50,6 +51,7 @@ export const softwareTypeEnum = pgEnum('software_type', SOFTWARE_TYPES);
 export const vulnSourceEnum = pgEnum('vuln_source', VULN_SOURCES);
 export const userTokenPurposeEnum = pgEnum('user_token_purpose', USER_TOKEN_PURPOSES);
 export const serviceRequestStatusEnum = pgEnum('service_request_status', SERVICE_REQUEST_STATUSES);
+export const confidenceEnum = pgEnum('confidence', CONFIDENCES);
 
 // ---------------------------------------------------------------------------
 // Accounts and auth
@@ -156,11 +158,13 @@ export const sites = pgTable(
 // ---------------------------------------------------------------------------
 // Scans and findings
 // ---------------------------------------------------------------------------
-export interface DetectedSoftware {
-  wordpress?: { version?: string; sources: string[] };
-  php?: { version?: string; source: string };
-  plugins?: Array<{ slug: string; version?: string; active?: boolean; sources: string[] }>;
-  themes?: Array<{ slug: string; version?: string; active?: boolean; sources: string[] }>;
+export interface ModuleResult {
+  module: string;
+  status: 'ok' | 'skipped' | 'failed' | 'budget_exhausted';
+  durationMs: number;
+  requests: number;
+  findings: number;
+  note?: string;
 }
 
 export const scans = pgTable(
@@ -180,7 +184,12 @@ export const scans = pgTable(
     score: smallint('score'),
     grade: char('grade', { length: 1 }),
     requestCount: integer('request_count').notNull().default(0),
-    detected: jsonb('detected').$type<DetectedSoftware>(),
+    /** Origin the scan actually reached after redirects, e.g. https://www.example.com */
+    baseUrl: text('base_url'),
+    /** Per-module outcome, for transparency and debugging. */
+    moduleResults: jsonb('module_results').$type<ModuleResult[]>(),
+    /** Ontology version the findings' concept ids belong to. */
+    ontologyVersion: text('ontology_version'),
     error: text('error'),
   },
   (t) => [
@@ -191,6 +200,38 @@ export const scans = pgTable(
       .where(sql`${t.status} in ('queued', 'running') and ${t.kind} = 'external'`),
     check('scans_score_range', sql`${t.score} is null or (${t.score} between 0 and 100)`),
     check('scans_grade_valid', sql`${t.grade} is null or ${t.grade} in ('A', 'B', 'C', 'D', 'E', 'F')`),
+  ],
+);
+
+/**
+ * Software found on a site during one scan: the instance layer of the ontology
+ * ("this site runs plugin X at version Y"). Findings point at these rows.
+ */
+export const siteComponents = pgTable(
+  'site_components',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    scanId: uuid('scan_id')
+      .notNull()
+      .references(() => scans.id, { onDelete: 'cascade' }),
+    siteId: uuid('site_id')
+      .notNull()
+      .references(() => sites.id, { onDelete: 'cascade' }),
+    softwareType: softwareTypeEnum('software_type').notNull(),
+    /** 'wordpress' for core, plugin/theme directory slug, 'php', or server name. */
+    slug: text('slug').notNull(),
+    name: text('name'),
+    version: text('version'),
+    versionConfidence: confidenceEnum('version_confidence'),
+    /** How it was detected, e.g. ['meta-generator', 'rss-feed']. */
+    sources: text('sources').array().notNull().default(sql`'{}'::text[]`),
+    /** Known only from the inside view (companion plugin). */
+    active: boolean('active'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    unique('site_components_scan_item_key').on(t.scanId, t.softwareType, t.slug),
+    index('site_components_site_lookup_idx').on(t.siteId, t.softwareType, t.slug),
   ],
 );
 
@@ -216,6 +257,10 @@ export const findings = pgTable(
       .notNull()
       .references(() => scans.id, { onDelete: 'cascade' }),
     checkId: text('check_id').notNull(),
+    /** Ontology exposure id, e.g. 'exposure/xmlrpc-enabled'. */
+    conceptId: text('concept_id').notNull(),
+    componentId: uuid('component_id').references(() => siteComponents.id, { onDelete: 'set null' }),
+    confidence: confidenceEnum('confidence').notNull().default('confirmed'),
     severity: severityEnum('severity').notNull(),
     title: text('title').notNull(),
     evidence: jsonb('evidence').$type<FindingEvidence>().notNull().default({}),
@@ -230,7 +275,7 @@ export const findings = pgTable(
     sortOrder: integer('sort_order').notNull().default(0),
     createdAt: createdAt(),
   },
-  (t) => [index('findings_scan_id_idx').on(t.scanId)],
+  (t) => [index('findings_scan_id_idx').on(t.scanId), index('findings_concept_idx').on(t.conceptId)],
 );
 
 // ---------------------------------------------------------------------------

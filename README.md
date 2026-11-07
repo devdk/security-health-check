@@ -2,7 +2,42 @@
 
 An attacker's-eye security audit for WordPress sites. Owners add a site, prove they own it, and get a scored security report. A companion WordPress plugin adds an inside-view audit.
 
-> **Status: Phase 2.** Done: scaffold, Docker Compose, config, schema and migrations, authentication, site management and ownership verification. Scanning and reports come next. A full README follows in the hardening phase.
+> **Status: Phase 3.** Done: scaffold, auth, site management, ownership verification, the security ontology, the scan queue and worker, and the first three checks (WordPress detection, plugins and themes, known vulnerabilities). Reports, scoring and the remaining checks come next. A full README follows in the hardening phase.
+
+## How a scan works
+
+```
+dashboard ──POST /api/sites/:id/scans──▶ API ──(re-verify ownership, cooldown, one at a time)──▶ BullMQ queue
+                                                                                                    │
+            site_components + findings ◀── worker ◀── re-verify ownership again ◀────────────────────┘
+                                             │
+                                             └─ scanner engine: PoliteClient (≤2 req/s per site, shared via Valkey;
+                                                request cap; verified domain only; GET/HEAD; honest User-Agent)
+                                                  stage 1: wp-detect, plugins-themes   (gather facts)
+                                                  stage 2: vuln-match                  (analyse facts)
+```
+
+- **Check modules** live in `packages/scanner/src/modules/`. Each one exports `run(target, context) → Finding[]` and can only reach the site through `context.http`, which enforces the scanning rules in one place.
+- **Every finding points at an ontology concept** (`packages/ontology`), for example `exposure/known-vulnerable-component`. The concept links to its CWE weakness, the CAPEC attack it enables, the controls that reduce it and the remediations that fix it. Report text is generated from the concept. Export the vocabulary with `npm run export -w @shc/ontology` (writes `docs/ontology.jsonld`).
+- **Detected software** is stored per scan in `site_components`, and findings link to the component they concern.
+- **Limits** (in `.env`; the defaults are the product's promises): `SCAN_RATE_PER_SECOND` (at most 2), `SCAN_MAX_REQUESTS` (150), `SCAN_COOLDOWN_MINUTES` (15), `SCAN_TIMEOUT_SECONDS` (300).
+
+## Local test WordPress (end-to-end)
+
+A deliberately outdated WordPress (6.4.2 with Contact Form 7 5.3.1, CVE-2020-35489) runs under a separate compose profile. Its updates are disabled, it is published on 127.0.0.1 only, and the scanner reaches it as `http://wordpress.test`.
+
+```bash
+docker compose --profile testwp up -d
+node scripts/e2e-scan.mjs
+```
+
+The end-to-end script signs up through the real API, verifies ownership with the file method, runs a scan, and then reads the test site's access log to confirm the scanner never exceeded 2 requests per second and always sent its User-Agent.
+
+To re-record the HTTP fixtures that module tests replay:
+
+```bash
+npm run record-fixtures -w @shc/scanner
+```
 
 ## Ownership verification
 
@@ -83,9 +118,11 @@ apps/api        Fastify API (auth now; sites, scans, reports, plugin ingestion l
 apps/worker     BullMQ worker (skeleton now; scan jobs in Phase 3)
 apps/web        React + Vite dashboard
 packages/config Env loading and validation: the only code that reads process.env
-packages/core   Business rules shared by API and worker (audit log, re-verify before scan)
+packages/core   Business rules shared by API and worker (audit log, re-verify before scan, scan requests, queue)
 packages/db     Drizzle schema, generated SQL migrations, DB client
 packages/net    SSRF-safe HTTP client, IP policy, DNS, ownership checks
+packages/ontology  Security ontology: exposures, CWE/CAPEC mappings, controls, remediations, JSON-LD export
+packages/scanner   Scan engine, polite HTTP client, rate limiter, check modules, recorded fixtures
 packages/shared Domain constants and validation shared by every app (incl. the browser)
 docker/         Dockerfiles and nginx config
 scripts/        Build and setup helpers

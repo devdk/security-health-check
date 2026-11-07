@@ -20,6 +20,7 @@
     "@shc/net": "0.1.0",
     "@shc/shared": "0.1.0",
     "argon2": "^0.45.2",
+    "bullmq": "^6.7.2",
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.8",
     "ioredis": "^6.0.0",

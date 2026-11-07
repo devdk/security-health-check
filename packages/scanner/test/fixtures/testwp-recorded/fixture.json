@@ -1,0 +1,45 @@
+{
+  "description": "Recorded 2026-11-07 from the local test WordPress (docker compose --profile testwp).",
+  "origin": "http://wordpress.test",
+  "routes": {
+    "https://wordpress.test/": {
+      "error": "connect_failed"
+    },
+    "http://wordpress.test/": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      },
+      "bodyFile": "01-home.txt"
+    },
+    "http://wordpress.test/feed/": {
+      "status": 200,
+      "headers": {
+        "content-type": "application/rss+xml; charset=UTF-8",
+        "link": "<http://wordpress.test/wp-json/>; rel=\"https://api.w.org/\"",
+        "server": "Apache/2.4.57 (Debian)",
+        "x-powered-by": "PHP/8.1.27"
+      },
+      "bodyFile": "02-feed.txt"
+    },
+    "http://wordpress.test/wp-content/plugins/contact-form-7/readme.txt": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain",
+        "server": "Apache/2.4.57 (Debian)"
+      },
+      "bodyFile": "03-wp-content-plugins-contact-form-7-readme-txt.txt"
+    },
+    "http://wordpress.test/wp-content/themes/twentytwentyone/style.css": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/css",
+        "server": "Apache/2.4.57 (Debian)"
+      },
+      "bodyFile": "04-wp-content-themes-twentytwentyone-style-css.txt"
+    }
+  }
+}

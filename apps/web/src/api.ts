@@ -34,6 +34,35 @@ export interface Site {
   };
 }
 
+export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
+export type ScanStatus = 'queued' | 'running' | 'completed' | 'failed';
+
+export interface ScanSummary {
+  id: string;
+  siteId: string;
+  status: ScanStatus;
+  trigger: 'manual' | 'scheduled' | 'plugin';
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  requestCount: number;
+  baseUrl: string | null;
+  error: string | null;
+  findingCounts: Record<Severity, number>;
+}
+
+export interface ScanDetail extends ScanSummary {
+  domain: string;
+  components: Array<{
+    type: 'core' | 'plugin' | 'theme' | 'php' | 'web_server';
+    slug: string;
+    name: string | null;
+    version: string | null;
+    versionConfidence: 'confirmed' | 'likely' | 'possible' | null;
+  }>;
+  modules: Array<{ module: string; status: 'ok' | 'skipped' | 'failed' | 'budget_exhausted'; durationMs: number; requests: number; findings: number; note?: string }>;
+}
+
 /** JSON fetch against our own API. Cookies are first-party, so nothing is stored in JS. */
 export async function api<T>(path: string, options: { method?: string; body?: unknown } = {}): Promise<T> {
   const init: RequestInit = {

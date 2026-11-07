@@ -1,0 +1,1728 @@
+{
+  "@context": {
+    "shc": "urn:shc:",
+    "@vocab": "urn:shc:vocab#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "label": "skos:prefLabel",
+    "definition": "skos:definition",
+    "seeAlso": {
+      "@id": "rdfs:seeAlso",
+      "@type": "@id"
+    },
+    "appliesTo": {
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "hasWeakness": {
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "enables": {
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "mitigatedBy": {
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "remediatedBy": {
+      "@type": "@id",
+      "@container": "@set"
+    }
+  },
+  "@id": "urn:shc:ontology/2026.11.1",
+  "version": "2026.11.1",
+  "@graph": [
+    {
+      "@id": "shc:cwe/200",
+      "@type": "Weakness",
+      "label": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/200.html"
+    },
+    {
+      "@id": "shc:cwe/203",
+      "@type": "Weakness",
+      "label": "Observable Discrepancy",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/203.html"
+    },
+    {
+      "@id": "shc:cwe/269",
+      "@type": "Weakness",
+      "label": "Improper Privilege Management",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/269.html"
+    },
+    {
+      "@id": "shc:cwe/307",
+      "@type": "Weakness",
+      "label": "Improper Restriction of Excessive Authentication Attempts",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/307.html"
+    },
+    {
+      "@id": "shc:cwe/308",
+      "@type": "Weakness",
+      "label": "Use of Single-factor Authentication",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/308.html"
+    },
+    {
+      "@id": "shc:cwe/319",
+      "@type": "Weakness",
+      "label": "Cleartext Transmission of Sensitive Information",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/319.html"
+    },
+    {
+      "@id": "shc:cwe/326",
+      "@type": "Weakness",
+      "label": "Inadequate Encryption Strength",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/326.html"
+    },
+    {
+      "@id": "shc:cwe/327",
+      "@type": "Weakness",
+      "label": "Use of a Broken or Risky Cryptographic Algorithm",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/327.html"
+    },
+    {
+      "@id": "shc:cwe/434",
+      "@type": "Weakness",
+      "label": "Unrestricted Upload of File with Dangerous Type",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/434.html"
+    },
+    {
+      "@id": "shc:cwe/489",
+      "@type": "Weakness",
+      "label": "Active Debug Code",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/489.html"
+    },
+    {
+      "@id": "shc:cwe/497",
+      "@type": "Weakness",
+      "label": "Exposure of Sensitive System Information to an Unauthorized Control Sphere",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/497.html"
+    },
+    {
+      "@id": "shc:cwe/506",
+      "@type": "Weakness",
+      "label": "Embedded Malicious Code",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/506.html"
+    },
+    {
+      "@id": "shc:cwe/527",
+      "@type": "Weakness",
+      "label": "Exposure of Version-Control Repository to an Unauthorized Control Sphere",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/527.html"
+    },
+    {
+      "@id": "shc:cwe/530",
+      "@type": "Weakness",
+      "label": "Exposure of Backup File to an Unauthorized Control Sphere",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/530.html"
+    },
+    {
+      "@id": "shc:cwe/532",
+      "@type": "Weakness",
+      "label": "Insertion of Sensitive Information into Log File",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/532.html"
+    },
+    {
+      "@id": "shc:cwe/538",
+      "@type": "Weakness",
+      "label": "Insertion of Sensitive Information into Externally-Accessible File or Directory",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/538.html"
+    },
+    {
+      "@id": "shc:cwe/548",
+      "@type": "Weakness",
+      "label": "Exposure of Information Through Directory Listing",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/548.html"
+    },
+    {
+      "@id": "shc:cwe/614",
+      "@type": "Weakness",
+      "label": "Sensitive Cookie in HTTPS Session Without 'Secure' Attribute",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/614.html"
+    },
+    {
+      "@id": "shc:cwe/693",
+      "@type": "Weakness",
+      "label": "Protection Mechanism Failure",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/693.html"
+    },
+    {
+      "@id": "shc:cwe/732",
+      "@type": "Weakness",
+      "label": "Incorrect Permission Assignment for Critical Resource",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/732.html"
+    },
+    {
+      "@id": "shc:cwe/1004",
+      "@type": "Weakness",
+      "label": "Sensitive Cookie Without 'HttpOnly' Flag",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/1004.html"
+    },
+    {
+      "@id": "shc:cwe/1021",
+      "@type": "Weakness",
+      "label": "Improper Restriction of Rendered UI Layers or Frames",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/1021.html"
+    },
+    {
+      "@id": "shc:cwe/1104",
+      "@type": "Weakness",
+      "label": "Use of Unmaintained Third Party Components",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/1104.html"
+    },
+    {
+      "@id": "shc:cwe/1275",
+      "@type": "Weakness",
+      "label": "Sensitive Cookie with Improper SameSite Attribute",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/1275.html"
+    },
+    {
+      "@id": "shc:cwe/1395",
+      "@type": "Weakness",
+      "label": "Dependency on Vulnerable Third-Party Component",
+      "seeAlso": "https://cwe.mitre.org/data/definitions/1395.html"
+    },
+    {
+      "@id": "shc:capec/16",
+      "@type": "AttackPattern",
+      "label": "Dictionary-based Password Attack",
+      "seeAlso": "https://capec.mitre.org/data/definitions/16.html"
+    },
+    {
+      "@id": "shc:capec/31",
+      "@type": "AttackPattern",
+      "label": "Accessing/Intercepting/Modifying HTTP Cookies",
+      "seeAlso": "https://capec.mitre.org/data/definitions/31.html"
+    },
+    {
+      "@id": "shc:capec/49",
+      "@type": "AttackPattern",
+      "label": "Password Brute Forcing",
+      "seeAlso": "https://capec.mitre.org/data/definitions/49.html"
+    },
+    {
+      "@id": "shc:capec/63",
+      "@type": "AttackPattern",
+      "label": "Cross-Site Scripting (XSS)",
+      "seeAlso": "https://capec.mitre.org/data/definitions/63.html"
+    },
+    {
+      "@id": "shc:capec/87",
+      "@type": "AttackPattern",
+      "label": "Forceful Browsing",
+      "seeAlso": "https://capec.mitre.org/data/definitions/87.html"
+    },
+    {
+      "@id": "shc:capec/94",
+      "@type": "AttackPattern",
+      "label": "Adversary in the Middle (AiTM)",
+      "seeAlso": "https://capec.mitre.org/data/definitions/94.html"
+    },
+    {
+      "@id": "shc:capec/103",
+      "@type": "AttackPattern",
+      "label": "Clickjacking",
+      "seeAlso": "https://capec.mitre.org/data/definitions/103.html"
+    },
+    {
+      "@id": "shc:capec/127",
+      "@type": "AttackPattern",
+      "label": "Directory Indexing",
+      "seeAlso": "https://capec.mitre.org/data/definitions/127.html"
+    },
+    {
+      "@id": "shc:capec/157",
+      "@type": "AttackPattern",
+      "label": "Sniffing Attacks",
+      "seeAlso": "https://capec.mitre.org/data/definitions/157.html"
+    },
+    {
+      "@id": "shc:capec/170",
+      "@type": "AttackPattern",
+      "label": "Web Application Fingerprinting",
+      "seeAlso": "https://capec.mitre.org/data/definitions/170.html"
+    },
+    {
+      "@id": "shc:capec/575",
+      "@type": "AttackPattern",
+      "label": "Account Footprinting",
+      "seeAlso": "https://capec.mitre.org/data/definitions/575.html"
+    },
+    {
+      "@id": "shc:capec/620",
+      "@type": "AttackPattern",
+      "label": "Drop Encryption Level",
+      "seeAlso": "https://capec.mitre.org/data/definitions/620.html"
+    },
+    {
+      "@id": "shc:component/wordpress-core",
+      "@type": "Component",
+      "label": "WordPress core",
+      "definition": "The WordPress application itself."
+    },
+    {
+      "@id": "shc:component/plugin",
+      "@type": "Component",
+      "label": "Plugin",
+      "definition": "A WordPress plugin, active or inactive."
+    },
+    {
+      "@id": "shc:component/theme",
+      "@type": "Component",
+      "label": "Theme",
+      "definition": "A WordPress theme, including parent themes."
+    },
+    {
+      "@id": "shc:component/php-runtime",
+      "@type": "Component",
+      "label": "PHP runtime",
+      "definition": "The PHP version the site runs on."
+    },
+    {
+      "@id": "shc:component/web-server",
+      "@type": "Component",
+      "label": "Web server",
+      "definition": "The server software in front of WordPress (Apache, nginx, LiteSpeed)."
+    },
+    {
+      "@id": "shc:component/tls-endpoint",
+      "@type": "Component",
+      "label": "HTTPS endpoint",
+      "definition": "The TLS certificate and protocol configuration serving the site."
+    },
+    {
+      "@id": "shc:component/http-response",
+      "@type": "Component",
+      "label": "HTTP responses",
+      "definition": "Headers and cookies the site sends to browsers."
+    },
+    {
+      "@id": "shc:component/login-endpoint",
+      "@type": "Component",
+      "label": "Login page",
+      "definition": "wp-login.php and the wp-admin area."
+    },
+    {
+      "@id": "shc:component/rest-api",
+      "@type": "Component",
+      "label": "REST API",
+      "definition": "The WordPress REST API under /wp-json/."
+    },
+    {
+      "@id": "shc:component/xmlrpc-endpoint",
+      "@type": "Component",
+      "label": "XML-RPC endpoint",
+      "definition": "The legacy remote-publishing interface at /xmlrpc.php."
+    },
+    {
+      "@id": "shc:component/public-files",
+      "@type": "Component",
+      "label": "Publicly served files",
+      "definition": "Files and folders the web server will hand to anyone who asks."
+    },
+    {
+      "@id": "shc:component/user-accounts",
+      "@type": "Component",
+      "label": "User accounts",
+      "definition": "WordPress users, especially administrators."
+    },
+    {
+      "@id": "shc:component/site-files",
+      "@type": "Component",
+      "label": "Site files",
+      "definition": "PHP, configuration and uploaded files on the server."
+    },
+    {
+      "@id": "shc:control/hsts",
+      "@type": "Control",
+      "label": "HTTP Strict Transport Security",
+      "definition": "Tells browsers to only ever use HTTPS for the site."
+    },
+    {
+      "@id": "shc:control/csp",
+      "@type": "Control",
+      "label": "Content Security Policy",
+      "definition": "Limits which scripts and resources a page may load."
+    },
+    {
+      "@id": "shc:control/frame-protection",
+      "@type": "Control",
+      "label": "Frame protection",
+      "definition": "Stops other sites embedding yours in a frame (clickjacking)."
+    },
+    {
+      "@id": "shc:control/two-factor-authentication",
+      "@type": "Control",
+      "label": "Two-factor authentication",
+      "definition": "A second proof of identity beyond the password."
+    },
+    {
+      "@id": "shc:control/login-rate-limiting",
+      "@type": "Control",
+      "label": "Login rate limiting",
+      "definition": "Slows or blocks repeated failed sign-in attempts."
+    },
+    {
+      "@id": "shc:control/web-application-firewall",
+      "@type": "Control",
+      "label": "Web application firewall",
+      "definition": "Filters malicious requests before they reach WordPress."
+    },
+    {
+      "@id": "shc:control/automatic-updates",
+      "@type": "Control",
+      "label": "Automatic updates",
+      "definition": "Installs security releases without waiting for a person."
+    },
+    {
+      "@id": "shc:control/offsite-backups",
+      "@type": "Control",
+      "label": "Off-site backups",
+      "definition": "Backups stored away from the web server, out of public reach."
+    },
+    {
+      "@id": "shc:control/least-privilege",
+      "@type": "Control",
+      "label": "Least privilege",
+      "definition": "Each account has only the access it needs."
+    },
+    {
+      "@id": "shc:remediation/update-wordpress-core",
+      "@type": "Remediation",
+      "label": "Update WordPress",
+      "definition": "Take a backup, then update WordPress from Dashboard → Updates to the latest release.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/update-affected-component",
+      "@type": "Remediation",
+      "label": "Update the affected software",
+      "definition": "Update the affected plugin, theme or WordPress core to the fixed version or later. If no fix exists, deactivate and delete it until one is released.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/remove-unused-component",
+      "@type": "Remediation",
+      "label": "Remove unused plugins and themes",
+      "definition": "Delete plugins and themes you are not using. Deactivated code can still be reached and exploited.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/enable-auto-updates",
+      "@type": "Remediation",
+      "label": "Turn on automatic updates",
+      "definition": "Enable automatic updates for WordPress core, plugins and themes so security fixes install without delay.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/hide-version-info",
+      "@type": "Remediation",
+      "label": "Stop advertising version numbers",
+      "definition": "Remove the WordPress generator tag and version query strings. This slows attackers down; keeping software updated is the real fix.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/block-readme-files",
+      "@type": "Remediation",
+      "label": "Block plugin readme files",
+      "definition": "Deny web access to readme.txt and changelog files inside wp-content so plugin versions are not advertised.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/hide-php-version",
+      "@type": "Remediation",
+      "label": "Hide the PHP version",
+      "definition": "Set expose_php = Off in php.ini (or ask your host) so the X-Powered-By header no longer reveals the PHP version.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/upgrade-php",
+      "@type": "Remediation",
+      "label": "Upgrade PHP",
+      "definition": "Move the site to a PHP version that still receives security updates. Most hosts offer this in their control panel.",
+      "effort": "hour"
+    },
+    {
+      "@id": "shc:remediation/remove-exposed-file",
+      "@type": "Remediation",
+      "label": "Remove the exposed file",
+      "definition": "Delete the file from the web server or block access to it, then check your access logs to see whether anyone downloaded it.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/rotate-secrets",
+      "@type": "Remediation",
+      "label": "Change the leaked secrets",
+      "definition": "Assume the contents were copied. Change the database password, regenerate the WordPress keys and salts, and replace any API keys the file contained.",
+      "effort": "hour"
+    },
+    {
+      "@id": "shc:remediation/block-hidden-files",
+      "@type": "Remediation",
+      "label": "Block hidden files",
+      "definition": "Configure the web server to refuse requests for dot-files and folders such as .git and .env.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/move-backups-offsite",
+      "@type": "Remediation",
+      "label": "Keep backups off the web server",
+      "definition": "Store backups outside the public web folder or, better, off the server entirely.",
+      "effort": "hour"
+    },
+    {
+      "@id": "shc:remediation/disable-debug-logging",
+      "@type": "Remediation",
+      "label": "Turn off public debugging",
+      "definition": "Set WP_DEBUG and WP_DEBUG_DISPLAY to false on the live site, and keep any debug log outside the public web folder.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/restrict-user-enumeration",
+      "@type": "Remediation",
+      "label": "Hide usernames",
+      "definition": "Block the REST API users endpoint and author archives for visitors who are not signed in, for example with a security plugin.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/disable-xmlrpc",
+      "@type": "Remediation",
+      "label": "Disable XML-RPC",
+      "definition": "If you do not use the WordPress mobile app or Jetpack, block /xmlrpc.php at the web server or with a security plugin.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/disable-directory-listing",
+      "@type": "Remediation",
+      "label": "Turn off directory listings",
+      "definition": "Disable automatic directory indexes in the web server (for Apache: Options -Indexes).",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/enforce-https",
+      "@type": "Remediation",
+      "label": "Redirect everything to HTTPS",
+      "definition": "Redirect all HTTP requests to HTTPS and make sure the WordPress and site addresses use https://.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/renew-certificate",
+      "@type": "Remediation",
+      "label": "Renew the certificate",
+      "definition": "Renew the TLS certificate and turn on automatic renewal (most hosts and Let’s Encrypt support this).",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/install-valid-certificate",
+      "@type": "Remediation",
+      "label": "Install a valid certificate",
+      "definition": "Install a certificate from a trusted authority that covers every hostname the site is served on.",
+      "effort": "hour"
+    },
+    {
+      "@id": "shc:remediation/disable-legacy-tls",
+      "@type": "Remediation",
+      "label": "Turn off old TLS versions",
+      "definition": "Disable TLS 1.0 and 1.1 so only TLS 1.2 and 1.3 are offered.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/add-security-header",
+      "@type": "Remediation",
+      "label": "Add the missing security header",
+      "definition": "Add the header in your web server configuration, CDN, or with a security-headers plugin.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/fix-cookie-flags",
+      "@type": "Remediation",
+      "label": "Harden cookie settings",
+      "definition": "Make sure session cookies are sent with the Secure, HttpOnly and SameSite attributes.",
+      "effort": "hour"
+    },
+    {
+      "@id": "shc:remediation/protect-login",
+      "@type": "Remediation",
+      "label": "Protect the login page",
+      "definition": "Limit failed login attempts, require two-factor authentication for administrators, and consider restricting wp-admin by IP or putting it behind a firewall.",
+      "effort": "hour"
+    },
+    {
+      "@id": "shc:remediation/enable-two-factor",
+      "@type": "Remediation",
+      "label": "Require two-factor authentication",
+      "definition": "Install a two-factor authentication plugin and require it for every administrator and editor.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/incident-response",
+      "@type": "Remediation",
+      "label": "Respond to a possible compromise",
+      "definition": "Treat the site as compromised: keep a copy for investigation, restore clean files from a trusted backup, change every password and key, and check for backdoors. Consider professional help.",
+      "effort": "day"
+    },
+    {
+      "@id": "shc:remediation/restore-core-files",
+      "@type": "Remediation",
+      "label": "Restore original WordPress files",
+      "definition": "Reinstall the same WordPress version over the existing files (Dashboard → Updates → Re-install) to replace modified core files.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/fix-file-permissions",
+      "@type": "Remediation",
+      "label": "Tighten file permissions",
+      "definition": "Make wp-config.php readable only by the web server user (for example 400 or 440) and not writable by others.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:remediation/review-admin-accounts",
+      "@type": "Remediation",
+      "label": "Review administrator accounts",
+      "definition": "Remove administrator accounts that are not needed and downgrade the rest to the lowest role that works.",
+      "effort": "minutes"
+    },
+    {
+      "@id": "shc:exposure/wordpress-version-disclosed",
+      "@type": "Exposure",
+      "label": "WordPress version is publicly visible",
+      "definition": "Your site tells every visitor exactly which WordPress version it runs. Attackers use this to pick exploits that match your version without having to probe.",
+      "defaultSeverity": "low",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/wordpress-core"
+      ],
+      "hasWeakness": [
+        "shc:cwe/497"
+      ],
+      "enables": [
+        "shc:capec/170"
+      ],
+      "mitigatedBy": [
+        "shc:control/automatic-updates"
+      ],
+      "remediatedBy": [
+        "shc:remediation/hide-version-info",
+        "shc:remediation/update-wordpress-core"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "wp-detect"
+      ]
+    },
+    {
+      "@id": "shc:exposure/wordpress-core-outdated",
+      "@type": "Exposure",
+      "label": "WordPress is out of date",
+      "definition": "A newer WordPress release is available. Updates often include security fixes, and older versions are what automated attacks target first.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/wordpress-core"
+      ],
+      "hasWeakness": [
+        "shc:cwe/1104"
+      ],
+      "enables": [],
+      "mitigatedBy": [
+        "shc:control/automatic-updates"
+      ],
+      "remediatedBy": [
+        "shc:remediation/update-wordpress-core",
+        "shc:remediation/enable-auto-updates"
+      ],
+      "owaspTop10": [
+        "A06:2021"
+      ],
+      "detectedBy": [
+        "wp-detect"
+      ]
+    },
+    {
+      "@id": "shc:exposure/plugin-outdated",
+      "@type": "Exposure",
+      "label": "Plugin is out of date",
+      "definition": "A newer version of this plugin is available. Plugins are the most common way WordPress sites are broken into.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/plugin"
+      ],
+      "hasWeakness": [
+        "shc:cwe/1104"
+      ],
+      "enables": [],
+      "mitigatedBy": [
+        "shc:control/automatic-updates"
+      ],
+      "remediatedBy": [
+        "shc:remediation/update-affected-component",
+        "shc:remediation/enable-auto-updates"
+      ],
+      "owaspTop10": [
+        "A06:2021"
+      ],
+      "detectedBy": [
+        "plugins-themes",
+        "plugin"
+      ]
+    },
+    {
+      "@id": "shc:exposure/theme-outdated",
+      "@type": "Exposure",
+      "label": "Theme is out of date",
+      "definition": "A newer version of this theme is available. Themes run code on every page and can carry vulnerabilities just like plugins.",
+      "defaultSeverity": "low",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/theme"
+      ],
+      "hasWeakness": [
+        "shc:cwe/1104"
+      ],
+      "enables": [],
+      "mitigatedBy": [
+        "shc:control/automatic-updates"
+      ],
+      "remediatedBy": [
+        "shc:remediation/update-affected-component",
+        "shc:remediation/enable-auto-updates"
+      ],
+      "owaspTop10": [
+        "A06:2021"
+      ],
+      "detectedBy": [
+        "plugins-themes",
+        "plugin"
+      ]
+    },
+    {
+      "@id": "shc:exposure/known-vulnerable-component",
+      "@type": "Exposure",
+      "label": "Software with a known vulnerability",
+      "definition": "The version of this software running on your site is affected by a publicly documented vulnerability. Published vulnerabilities are quickly added to automated attack tools.",
+      "defaultSeverity": "high",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/wordpress-core",
+        "shc:component/plugin",
+        "shc:component/theme",
+        "shc:component/php-runtime"
+      ],
+      "hasWeakness": [
+        "shc:cwe/1395"
+      ],
+      "enables": [],
+      "mitigatedBy": [
+        "shc:control/automatic-updates",
+        "shc:control/web-application-firewall"
+      ],
+      "remediatedBy": [
+        "shc:remediation/update-affected-component",
+        "shc:remediation/remove-unused-component"
+      ],
+      "owaspTop10": [
+        "A06:2021"
+      ],
+      "detectedBy": [
+        "vuln-match"
+      ]
+    },
+    {
+      "@id": "shc:exposure/component-versions-disclosed",
+      "@type": "Exposure",
+      "label": "Plugin and theme versions are publicly readable",
+      "definition": "Files such as readme.txt and style.css reveal which plugins and themes you use and their versions, making it easy to match your site against vulnerability lists.",
+      "defaultSeverity": "info",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/plugin",
+        "shc:component/theme",
+        "shc:component/public-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/200"
+      ],
+      "enables": [
+        "shc:capec/170"
+      ],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/block-readme-files"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "plugins-themes"
+      ]
+    },
+    {
+      "@id": "shc:exposure/inactive-component-installed",
+      "@type": "Exposure",
+      "label": "Unused plugin or theme installed",
+      "definition": "Deactivated plugins and themes are still on the server and their files can still be reached, but nobody is watching or updating them.",
+      "defaultSeverity": "low",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/plugin",
+        "shc:component/theme"
+      ],
+      "hasWeakness": [
+        "shc:cwe/1104"
+      ],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/remove-unused-component"
+      ],
+      "owaspTop10": [
+        "A06:2021"
+      ],
+      "detectedBy": [
+        "plugin"
+      ]
+    },
+    {
+      "@id": "shc:exposure/php-version-disclosed",
+      "@type": "Exposure",
+      "label": "PHP version is publicly visible",
+      "definition": "Your server announces its PHP version in every response, telling attackers exactly which PHP flaws to try.",
+      "defaultSeverity": "low",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/php-runtime",
+        "shc:component/http-response"
+      ],
+      "hasWeakness": [
+        "shc:cwe/497"
+      ],
+      "enables": [
+        "shc:capec/170"
+      ],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/hide-php-version"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "php-version"
+      ]
+    },
+    {
+      "@id": "shc:exposure/php-unsupported",
+      "@type": "Exposure",
+      "label": "PHP version no longer receives security fixes",
+      "definition": "This PHP version has reached end of life. New security problems in it will never be fixed.",
+      "defaultSeverity": "high",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/php-runtime"
+      ],
+      "hasWeakness": [
+        "shc:cwe/1104"
+      ],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/upgrade-php"
+      ],
+      "owaspTop10": [
+        "A06:2021"
+      ],
+      "detectedBy": [
+        "php-version",
+        "plugin"
+      ]
+    },
+    {
+      "@id": "shc:exposure/config-backup-exposed",
+      "@type": "Exposure",
+      "label": "Backup of wp-config.php is downloadable",
+      "definition": "A copy of your WordPress configuration file can be downloaded. It contains your database password and secret keys, which can be enough to take over the site.",
+      "defaultSeverity": "critical",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/public-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/530"
+      ],
+      "enables": [
+        "shc:capec/87"
+      ],
+      "mitigatedBy": [
+        "shc:control/offsite-backups"
+      ],
+      "remediatedBy": [
+        "shc:remediation/remove-exposed-file",
+        "shc:remediation/rotate-secrets"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "exposed-files"
+      ]
+    },
+    {
+      "@id": "shc:exposure/env-file-exposed",
+      "@type": "Exposure",
+      "label": "Environment file (.env) is downloadable",
+      "definition": "A .env file is publicly readable. These files usually hold passwords and API keys.",
+      "defaultSeverity": "critical",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/public-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/538"
+      ],
+      "enables": [
+        "shc:capec/87"
+      ],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/remove-exposed-file",
+        "shc:remediation/block-hidden-files",
+        "shc:remediation/rotate-secrets"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "exposed-files"
+      ]
+    },
+    {
+      "@id": "shc:exposure/git-repository-exposed",
+      "@type": "Exposure",
+      "label": "Git repository is publicly accessible",
+      "definition": "The site’s .git folder can be read. Attackers can rebuild your source code from it, including any passwords ever committed.",
+      "defaultSeverity": "high",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/public-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/527"
+      ],
+      "enables": [
+        "shc:capec/87"
+      ],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/block-hidden-files",
+        "shc:remediation/rotate-secrets"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "exposed-files"
+      ]
+    },
+    {
+      "@id": "shc:exposure/database-dump-exposed",
+      "@type": "Exposure",
+      "label": "Database export is downloadable",
+      "definition": "A database export (.sql file) is publicly available. It can contain every user, password hash, email address and post on the site.",
+      "defaultSeverity": "critical",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/public-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/530"
+      ],
+      "enables": [
+        "shc:capec/87"
+      ],
+      "mitigatedBy": [
+        "shc:control/offsite-backups"
+      ],
+      "remediatedBy": [
+        "shc:remediation/remove-exposed-file",
+        "shc:remediation/move-backups-offsite",
+        "shc:remediation/rotate-secrets"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "exposed-files"
+      ]
+    },
+    {
+      "@id": "shc:exposure/site-archive-exposed",
+      "@type": "Exposure",
+      "label": "Site backup archive is downloadable",
+      "definition": "A backup archive (for example a .zip of the site) is publicly available. It can include configuration files, the database and private uploads.",
+      "defaultSeverity": "critical",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/public-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/530"
+      ],
+      "enables": [
+        "shc:capec/87"
+      ],
+      "mitigatedBy": [
+        "shc:control/offsite-backups"
+      ],
+      "remediatedBy": [
+        "shc:remediation/remove-exposed-file",
+        "shc:remediation/move-backups-offsite",
+        "shc:remediation/rotate-secrets"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "exposed-files"
+      ]
+    },
+    {
+      "@id": "shc:exposure/debug-log-exposed",
+      "@type": "Exposure",
+      "label": "Debug log is publicly readable",
+      "definition": "WordPress’s debug.log can be downloaded. Logs reveal file paths, plugin errors and sometimes personal data or secrets.",
+      "defaultSeverity": "high",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/public-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/532"
+      ],
+      "enables": [
+        "shc:capec/87"
+      ],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/remove-exposed-file",
+        "shc:remediation/disable-debug-logging"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "exposed-files"
+      ]
+    },
+    {
+      "@id": "shc:exposure/phpinfo-exposed",
+      "@type": "Exposure",
+      "label": "PHP information page is public",
+      "definition": "A phpinfo page shows your full server configuration, software versions and file paths to anyone.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/public-files",
+        "shc:component/php-runtime"
+      ],
+      "hasWeakness": [
+        "shc:cwe/497"
+      ],
+      "enables": [
+        "shc:capec/170"
+      ],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/remove-exposed-file"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "exposed-files"
+      ]
+    },
+    {
+      "@id": "shc:exposure/directory-listing-enabled",
+      "@type": "Exposure",
+      "label": "Folder contents can be browsed",
+      "definition": "Some folders show a list of every file inside them, which helps attackers find backups, uploads and plugin files.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/public-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/548"
+      ],
+      "enables": [
+        "shc:capec/127"
+      ],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/disable-directory-listing"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "directory-listing"
+      ]
+    },
+    {
+      "@id": "shc:exposure/usernames-via-rest-api",
+      "@type": "Exposure",
+      "label": "Usernames are listed by the REST API",
+      "definition": "Anyone can download a list of your users’ login names from /wp-json/wp/v2/users. That gives attackers half of every login.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/rest-api",
+        "shc:component/user-accounts"
+      ],
+      "hasWeakness": [
+        "shc:cwe/200"
+      ],
+      "enables": [
+        "shc:capec/575",
+        "shc:capec/49"
+      ],
+      "mitigatedBy": [
+        "shc:control/two-factor-authentication",
+        "shc:control/login-rate-limiting"
+      ],
+      "remediatedBy": [
+        "shc:remediation/restrict-user-enumeration"
+      ],
+      "owaspTop10": [
+        "A07:2021"
+      ],
+      "detectedBy": [
+        "user-enum"
+      ]
+    },
+    {
+      "@id": "shc:exposure/usernames-via-author-archives",
+      "@type": "Exposure",
+      "label": "Usernames are revealed by author pages",
+      "definition": "Visiting /?author=1 reveals a user’s login name in the page address, so attackers can list your accounts one by one.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/user-accounts"
+      ],
+      "hasWeakness": [
+        "shc:cwe/203"
+      ],
+      "enables": [
+        "shc:capec/575",
+        "shc:capec/49"
+      ],
+      "mitigatedBy": [
+        "shc:control/two-factor-authentication",
+        "shc:control/login-rate-limiting"
+      ],
+      "remediatedBy": [
+        "shc:remediation/restrict-user-enumeration"
+      ],
+      "owaspTop10": [
+        "A07:2021"
+      ],
+      "detectedBy": [
+        "user-enum"
+      ]
+    },
+    {
+      "@id": "shc:exposure/xmlrpc-enabled",
+      "@type": "Exposure",
+      "label": "XML-RPC is enabled",
+      "definition": "xmlrpc.php accepts requests. Attackers use it to try hundreds of passwords in a single request and to abuse your site in attacks on others.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/xmlrpc-endpoint"
+      ],
+      "hasWeakness": [
+        "shc:cwe/307"
+      ],
+      "enables": [
+        "shc:capec/49"
+      ],
+      "mitigatedBy": [
+        "shc:control/web-application-firewall",
+        "shc:control/login-rate-limiting"
+      ],
+      "remediatedBy": [
+        "shc:remediation/disable-xmlrpc"
+      ],
+      "owaspTop10": [
+        "A07:2021"
+      ],
+      "detectedBy": [
+        "xmlrpc"
+      ]
+    },
+    {
+      "@id": "shc:exposure/login-unprotected",
+      "@type": "Exposure",
+      "label": "Login page has no visible extra protection",
+      "definition": "wp-login.php and wp-admin are open to the whole internet with no sign of rate limiting, CAPTCHA or access restriction, so password-guessing bots can work freely.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/login-endpoint"
+      ],
+      "hasWeakness": [
+        "shc:cwe/307"
+      ],
+      "enables": [
+        "shc:capec/49",
+        "shc:capec/16"
+      ],
+      "mitigatedBy": [
+        "shc:control/login-rate-limiting",
+        "shc:control/two-factor-authentication",
+        "shc:control/web-application-firewall"
+      ],
+      "remediatedBy": [
+        "shc:remediation/protect-login",
+        "shc:remediation/enable-two-factor"
+      ],
+      "owaspTop10": [
+        "A07:2021"
+      ],
+      "detectedBy": [
+        "admin-exposure"
+      ]
+    },
+    {
+      "@id": "shc:exposure/no-two-factor-auth",
+      "@type": "Exposure",
+      "label": "No two-factor authentication",
+      "definition": "Administrators sign in with a password alone. A single leaked or guessed password gives full control of the site.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/user-accounts",
+        "shc:component/login-endpoint"
+      ],
+      "hasWeakness": [
+        "shc:cwe/308"
+      ],
+      "enables": [
+        "shc:capec/49"
+      ],
+      "mitigatedBy": [
+        "shc:control/two-factor-authentication"
+      ],
+      "remediatedBy": [
+        "shc:remediation/enable-two-factor"
+      ],
+      "owaspTop10": [
+        "A07:2021"
+      ],
+      "detectedBy": [
+        "plugin"
+      ]
+    },
+    {
+      "@id": "shc:exposure/excessive-administrators",
+      "@type": "Exposure",
+      "label": "More administrator accounts than needed",
+      "definition": "Every administrator account is a way in. Accounts that do not need full control should have a lower role.",
+      "defaultSeverity": "low",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/user-accounts"
+      ],
+      "hasWeakness": [
+        "shc:cwe/269"
+      ],
+      "enables": [],
+      "mitigatedBy": [
+        "shc:control/least-privilege"
+      ],
+      "remediatedBy": [
+        "shc:remediation/review-admin-accounts"
+      ],
+      "owaspTop10": [
+        "A01:2021"
+      ],
+      "detectedBy": [
+        "plugin"
+      ]
+    },
+    {
+      "@id": "shc:exposure/https-not-enforced",
+      "@type": "Exposure",
+      "label": "Visitors are not forced onto HTTPS",
+      "definition": "The site still answers over plain HTTP without redirecting. Logins and cookies sent that way can be read or changed on public Wi-Fi.",
+      "defaultSeverity": "high",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/tls-endpoint"
+      ],
+      "hasWeakness": [
+        "shc:cwe/319"
+      ],
+      "enables": [
+        "shc:capec/94",
+        "shc:capec/157"
+      ],
+      "mitigatedBy": [
+        "shc:control/hsts"
+      ],
+      "remediatedBy": [
+        "shc:remediation/enforce-https"
+      ],
+      "owaspTop10": [
+        "A02:2021"
+      ],
+      "detectedBy": [
+        "tls"
+      ]
+    },
+    {
+      "@id": "shc:exposure/tls-certificate-expired",
+      "@type": "Exposure",
+      "label": "HTTPS certificate has expired",
+      "definition": "Browsers show a full-page security warning to your visitors, and the connection can no longer be trusted.",
+      "defaultSeverity": "high",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/tls-endpoint"
+      ],
+      "hasWeakness": [],
+      "enables": [
+        "shc:capec/94"
+      ],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/renew-certificate"
+      ],
+      "owaspTop10": [
+        "A02:2021"
+      ],
+      "detectedBy": [
+        "tls"
+      ]
+    },
+    {
+      "@id": "shc:exposure/tls-certificate-expiring-soon",
+      "@type": "Exposure",
+      "label": "HTTPS certificate expires soon",
+      "definition": "Your certificate expires within the next few weeks. If it is not renewed, visitors will see security warnings.",
+      "defaultSeverity": "low",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/tls-endpoint"
+      ],
+      "hasWeakness": [],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/renew-certificate"
+      ],
+      "owaspTop10": [
+        "A02:2021"
+      ],
+      "detectedBy": [
+        "tls"
+      ]
+    },
+    {
+      "@id": "shc:exposure/tls-certificate-invalid",
+      "@type": "Exposure",
+      "label": "HTTPS certificate is not trusted",
+      "definition": "The certificate is self-signed, issued by an untrusted authority, or does not match the site name, so browsers warn visitors.",
+      "defaultSeverity": "high",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/tls-endpoint"
+      ],
+      "hasWeakness": [],
+      "enables": [
+        "shc:capec/94"
+      ],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/install-valid-certificate"
+      ],
+      "owaspTop10": [
+        "A02:2021"
+      ],
+      "detectedBy": [
+        "tls"
+      ]
+    },
+    {
+      "@id": "shc:exposure/tls-legacy-protocol",
+      "@type": "Exposure",
+      "label": "Outdated TLS versions accepted",
+      "definition": "The server still accepts TLS 1.0 or 1.1, which have known weaknesses and are no longer considered safe.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/tls-endpoint"
+      ],
+      "hasWeakness": [
+        "shc:cwe/327"
+      ],
+      "enables": [
+        "shc:capec/620"
+      ],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/disable-legacy-tls"
+      ],
+      "owaspTop10": [
+        "A02:2021"
+      ],
+      "detectedBy": [
+        "tls"
+      ]
+    },
+    {
+      "@id": "shc:exposure/hsts-missing",
+      "@type": "Exposure",
+      "label": "HSTS header missing",
+      "definition": "Without Strict-Transport-Security, a visitor’s first request can be quietly downgraded to unencrypted HTTP by someone on the same network.",
+      "defaultSeverity": "low",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/http-response"
+      ],
+      "hasWeakness": [
+        "shc:cwe/319"
+      ],
+      "enables": [
+        "shc:capec/94"
+      ],
+      "mitigatedBy": [
+        "shc:control/hsts"
+      ],
+      "remediatedBy": [
+        "shc:remediation/add-security-header"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "headers"
+      ]
+    },
+    {
+      "@id": "shc:exposure/csp-missing",
+      "@type": "Exposure",
+      "label": "Content Security Policy missing",
+      "definition": "A Content Security Policy limits the damage if an attacker manages to inject a script into a page. Without one, injected scripts run freely.",
+      "defaultSeverity": "low",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/http-response"
+      ],
+      "hasWeakness": [
+        "shc:cwe/693"
+      ],
+      "enables": [
+        "shc:capec/63"
+      ],
+      "mitigatedBy": [
+        "shc:control/csp"
+      ],
+      "remediatedBy": [
+        "shc:remediation/add-security-header"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "headers"
+      ]
+    },
+    {
+      "@id": "shc:exposure/clickjacking-protection-missing",
+      "@type": "Exposure",
+      "label": "Clickjacking protection missing",
+      "definition": "Other websites can load your pages invisibly in a frame and trick visitors into clicking buttons on them.",
+      "defaultSeverity": "low",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/http-response"
+      ],
+      "hasWeakness": [
+        "shc:cwe/1021"
+      ],
+      "enables": [
+        "shc:capec/103"
+      ],
+      "mitigatedBy": [
+        "shc:control/frame-protection"
+      ],
+      "remediatedBy": [
+        "shc:remediation/add-security-header"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "headers"
+      ]
+    },
+    {
+      "@id": "shc:exposure/mime-sniffing-protection-missing",
+      "@type": "Exposure",
+      "label": "MIME-sniffing protection missing",
+      "definition": "Without X-Content-Type-Options: nosniff, browsers may treat an uploaded file as a script.",
+      "defaultSeverity": "info",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/http-response"
+      ],
+      "hasWeakness": [
+        "shc:cwe/693"
+      ],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/add-security-header"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "headers"
+      ]
+    },
+    {
+      "@id": "shc:exposure/referrer-policy-missing",
+      "@type": "Exposure",
+      "label": "Referrer-Policy header missing",
+      "definition": "Full page addresses, which can contain private details, may be sent to other sites your pages link to.",
+      "defaultSeverity": "info",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/http-response"
+      ],
+      "hasWeakness": [
+        "shc:cwe/200"
+      ],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/add-security-header"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "headers"
+      ]
+    },
+    {
+      "@id": "shc:exposure/permissions-policy-missing",
+      "@type": "Exposure",
+      "label": "Permissions-Policy header missing",
+      "definition": "The site does not restrict which browser features (camera, microphone, location) embedded content may request.",
+      "defaultSeverity": "info",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/http-response"
+      ],
+      "hasWeakness": [
+        "shc:cwe/693"
+      ],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/add-security-header"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "headers"
+      ]
+    },
+    {
+      "@id": "shc:exposure/insecure-cookie-flags",
+      "@type": "Exposure",
+      "label": "Cookies sent without security flags",
+      "definition": "Some cookies are missing Secure, HttpOnly or SameSite, making them easier to steal or misuse.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/http-response"
+      ],
+      "hasWeakness": [
+        "shc:cwe/614",
+        "shc:cwe/1004",
+        "shc:cwe/1275"
+      ],
+      "enables": [
+        "shc:capec/31"
+      ],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/fix-cookie-flags"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "headers"
+      ]
+    },
+    {
+      "@id": "shc:exposure/debug-mode-enabled",
+      "@type": "Exposure",
+      "label": "Debug mode is switched on",
+      "definition": "WP_DEBUG is enabled on the live site, which can print errors and internal details to visitors.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/site-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/489"
+      ],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/disable-debug-logging"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "plugin"
+      ]
+    },
+    {
+      "@id": "shc:exposure/config-file-permissions-weak",
+      "@type": "Exposure",
+      "label": "wp-config.php permissions are too open",
+      "definition": "Your configuration file can be read or changed by more server users than necessary.",
+      "defaultSeverity": "medium",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/site-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/732"
+      ],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/fix-file-permissions"
+      ],
+      "owaspTop10": [
+        "A05:2021"
+      ],
+      "detectedBy": [
+        "plugin"
+      ]
+    },
+    {
+      "@id": "shc:exposure/core-files-modified",
+      "@type": "Exposure",
+      "label": "WordPress core files have been changed",
+      "definition": "Some WordPress system files differ from the official release. Legitimate sites never change these, so this is a common sign of a break-in.",
+      "defaultSeverity": "critical",
+      "indicatesCompromise": true,
+      "appliesTo": [
+        "shc:component/wordpress-core",
+        "shc:component/site-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/506"
+      ],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/incident-response",
+        "shc:remediation/restore-core-files"
+      ],
+      "owaspTop10": [
+        "A08:2021"
+      ],
+      "detectedBy": [
+        "plugin"
+      ]
+    },
+    {
+      "@id": "shc:exposure/php-in-uploads",
+      "@type": "Exposure",
+      "label": "PHP files found in the uploads folder",
+      "definition": "The uploads folder should only contain images and documents. PHP files there are a classic sign of a backdoor.",
+      "defaultSeverity": "critical",
+      "indicatesCompromise": true,
+      "appliesTo": [
+        "shc:component/site-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/434",
+        "shc:cwe/506"
+      ],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/incident-response"
+      ],
+      "owaspTop10": [
+        "A08:2021"
+      ],
+      "detectedBy": [
+        "plugin"
+      ]
+    },
+    {
+      "@id": "shc:exposure/suspicious-file-changes",
+      "@type": "Exposure",
+      "label": "Recently changed PHP files need checking",
+      "definition": "PHP files in wp-content changed recently without a matching update. This can be harmless, but is also what an intruder’s changes look like.",
+      "defaultSeverity": "high",
+      "indicatesCompromise": true,
+      "appliesTo": [
+        "shc:component/site-files"
+      ],
+      "hasWeakness": [
+        "shc:cwe/506"
+      ],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [
+        "shc:remediation/incident-response"
+      ],
+      "owaspTop10": [
+        "A08:2021"
+      ],
+      "detectedBy": [
+        "plugin"
+      ]
+    },
+    {
+      "@id": "shc:observation/wordpress-not-detected",
+      "@type": "Observation",
+      "label": "WordPress not detected",
+      "definition": "We could not find signs of WordPress on this site, so WordPress-specific checks were skipped. If the site does run WordPress, it may be heavily customised or behind a proxy that hides it.",
+      "defaultSeverity": "info",
+      "indicatesCompromise": false,
+      "appliesTo": [
+        "shc:component/wordpress-core"
+      ],
+      "hasWeakness": [],
+      "enables": [],
+      "mitigatedBy": [],
+      "remediatedBy": [],
+      "owaspTop10": [],
+      "detectedBy": [
+        "wp-detect"
+      ]
+    }
+  ]
+}

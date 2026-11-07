@@ -8,6 +8,20 @@
       "when": 1793961125995,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794073344577,
+      "tag": "0001_scan_engine",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794073359323,
+      "tag": "0002_drop_scan_detected",
+      "breakpoints": true
     }
   ]
 }

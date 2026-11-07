@@ -3,6 +3,7 @@ import { Redis } from 'ioredis';
 import { expect } from 'vitest';
 import { loadConfig, type Config } from '@shc/config';
 import { createDb, type Database } from '@shc/db';
+import type { ScanQueue } from '@shc/core';
 import type { OwnershipChecker, OwnershipResult } from '@shc/net';
 import type { VerifyMethod } from '@shc/shared';
 import { buildApp, type App } from '../src/app';
@@ -30,8 +31,24 @@ export class FakeOwnership implements OwnershipChecker {
   }
 }
 
+/** Records enqueued scans instead of talking to BullMQ. */
+export class FakeQueue implements ScanQueue {
+  enqueued: string[] = [];
+  failNext = false;
+
+  async enqueue(scanId: string): Promise<void> {
+    if (this.failNext) {
+      this.failNext = false;
+      throw new Error('redis down');
+    }
+    this.enqueued.push(scanId);
+  }
+
+  async close(): Promise<void> {}
+}
+
 export async function createTestContext(
-  options: { rateLimit?: Partial<Config['rateLimit']>; ownership?: OwnershipChecker } = {},
+  options: { rateLimit?: Partial<Config['rateLimit']>; ownership?: OwnershipChecker; scanQueue?: ScanQueue } = {},
 ): Promise<TestContext> {
   const rateLimit = options.rateLimit ?? {};
   const base = loadConfig({
@@ -54,6 +71,7 @@ export async function createTestContext(
     redis,
     mailer,
     ownership: options.ownership ?? new FakeOwnership(),
+    scanQueue: options.scanQueue ?? new FakeQueue(),
     logger: false,
   });
   await app.ready();

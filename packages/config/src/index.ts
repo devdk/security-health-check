@@ -47,6 +47,17 @@ export interface Config {
     /** Optional DNS servers for ownership TXT lookups; empty = system resolver. */
     dnsResolvers: string[];
   };
+  scan: {
+    /** Hard cap on HTTP requests per scan. */
+    maxRequests: number;
+    /** Requests per second per target site, across all workers. Never more than 2. */
+    ratePerSecond: number;
+    /** Minimum gap between scans of the same site. */
+    cooldownMinutes: number;
+    /** Scans one worker process runs at once. */
+    concurrency: number;
+    timeoutSeconds: number;
+  };
 }
 
 export class ConfigError extends Error {
@@ -184,6 +195,14 @@ export function loadConfig(env: Env = process.env): Config {
       userAgent: r.string('SCANNER_USER_AGENT', `SecurityHealthCheck/0.1 (+${webBaseUrl.replace(/\/+$/, '')}/scanner)`),
       allowPrivateHosts: list(env.SCAN_ALLOW_PRIVATE_HOSTS).map((h) => h.toLowerCase()),
       dnsResolvers: list(env.DNS_RESOLVERS),
+    },
+    scan: {
+      maxRequests: r.int('SCAN_MAX_REQUESTS', 150, 10, 1000),
+      // The product promises at most 2 requests per second per site; config cannot raise it.
+      ratePerSecond: r.int('SCAN_RATE_PER_SECOND', 2, 1, 2),
+      cooldownMinutes: r.int('SCAN_COOLDOWN_MINUTES', 15, 0, 1440),
+      concurrency: r.int('SCAN_CONCURRENCY', 3, 1, 20),
+      timeoutSeconds: r.int('SCAN_TIMEOUT_SECONDS', 300, 30, 1800),
     },
   };
 

@@ -25,8 +25,12 @@ export type ScanStatus = (typeof SCAN_STATUSES)[number];
 export const SEVERITIES = ['critical', 'high', 'medium', 'low', 'info'] as const;
 export type Severity = (typeof SEVERITIES)[number];
 
-export const SOFTWARE_TYPES = ['core', 'plugin', 'theme', 'php'] as const;
+export const SOFTWARE_TYPES = ['core', 'plugin', 'theme', 'php', 'web_server'] as const;
 export type SoftwareType = (typeof SOFTWARE_TYPES)[number];
+
+/** How sure a check is: confirmed (direct evidence), likely (strong signal), possible (weak signal). */
+export const CONFIDENCES = ['confirmed', 'likely', 'possible'] as const;
+export type Confidence = (typeof CONFIDENCES)[number];
 
 export const VULN_SOURCES = ['wordfence', 'osv', 'nvd'] as const;
 export type VulnSource = (typeof VULN_SOURCES)[number];

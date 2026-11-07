@@ -17,6 +17,8 @@
   --info-text: #1d4f91;
   --warn-bg: #fdf3dc;
   --warn-text: #7a4b00;
+  --sev-critical-bg: #8b1111;
+  --sev-critical-text: #ffffff;
   --radius: 10px;
   --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 4px 16px rgb(16 24 40 / 6%);
   --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -42,6 +44,8 @@
     --info-text: #a9c8f5;
     --warn-bg: #3a2c0d;
     --warn-text: #f5d28a;
+    --sev-critical-bg: #ff8a8a;
+    --sev-critical-text: #2a0505;
     --shadow: 0 1px 2px rgb(0 0 0 / 40%);
   }
 }
@@ -493,6 +497,109 @@ form {
 
 .danger-zone {
   border-color: var(--danger-bg);
+}
+
+/* Scans */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.section-header h2 {
+  margin: 0;
+}
+.scan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.scan-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border);
+}
+.badge-scan-queued,
+.badge-scan-running {
+  background: var(--info-bg);
+  color: var(--info-text);
+  border-color: transparent;
+}
+.badge-scan-completed {
+  background: var(--success-bg);
+  color: var(--success-text);
+  border-color: transparent;
+}
+.badge-scan-failed {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  border-color: transparent;
+}
+.severity-counts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.sev {
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  text-transform: capitalize;
+}
+.sev-critical {
+  background: var(--sev-critical-bg);
+  color: var(--sev-critical-text);
+}
+.sev-high {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+.sev-medium {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+.sev-low {
+  background: var(--info-bg);
+  color: var(--info-text);
+}
+.sev-info {
+  background: var(--bg);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.component-group + .component-group {
+  margin-top: 1.25rem;
+}
+.component-group h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.4rem;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.table th {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.table td:first-child,
+.table th:first-child {
+  padding-left: 0;
 }
 
 /* Public prose pages */

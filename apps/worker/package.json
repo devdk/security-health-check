@@ -11,8 +11,13 @@
   },
   "dependencies": {
     "@shc/config": "0.1.0",
+    "@shc/core": "0.1.0",
     "@shc/db": "0.1.0",
+    "@shc/net": "0.1.0",
+    "@shc/ontology": "0.1.0",
+    "@shc/scanner": "0.1.0",
     "@shc/shared": "0.1.0",
+    "bullmq": "^6.7.2",
     "drizzle-orm": "^0.45.4",
     "ioredis": "^6.0.0",
     "pg": "^8.23.1",
