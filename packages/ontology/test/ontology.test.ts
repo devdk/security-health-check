@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SEVERITIES } from '@shc/shared';
-import { describeExposure, EXPOSURES, isExposureId, standardReferences, toJsonLd, validateOntology, type ExposureId } from '../src/index';
+import { describeExposure, EXPOSURES, fixGuides, isExposureId, standardReferences, toJsonLd, validateOntology, type ExposureId } from '../src/index';
 
 const ids = Object.keys(EXPOSURES) as ExposureId[];
 
@@ -29,11 +29,21 @@ describe('ontology', () => {
     for (const m of modules) expect(detectors, m).toContain(m);
   });
 
-  it('builds default report text from the remediations', () => {
+  it('builds report text with numbered steps from the remediations', () => {
     const { explanation, fixSteps } = describeExposure('exposure/config-backup-exposed');
     expect(explanation).toMatch(/database password/);
     expect(fixSteps).toContain('**Remove the exposed file.**');
     expect(fixSteps).toContain('**Change the leaked secrets.**');
+    expect(fixSteps).toMatch(/^1\. /m);
+  });
+
+  it('has a step-by-step guide for every remediation an exposure uses', () => {
+    for (const id of ids) {
+      for (const guide of fixGuides(id)) {
+        expect(guide.steps.length, guide.id).toBeGreaterThanOrEqual(2);
+        for (const step of guide.steps) expect(step.length).toBeLessThan(400);
+      }
+    }
   });
 
   it('links CWE and CAPEC references', () => {

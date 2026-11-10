@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { findings as findingsTable, scans, siteComponents, type Database } from '@shc/db';
-import { describeExposure, EXPOSURES, standardReferences } from '@shc/ontology';
+import { describeExposure, EXPOSURES, standardReferences, type ExposureDef } from '@shc/ontology';
+import { computeScore, selectFreeVisible } from '@shc/report';
 import type { ScanOutcome } from '@shc/scanner';
 import { SEVERITIES } from '@shc/shared';
 
@@ -8,10 +9,16 @@ const severityRank = (s: string) => SEVERITIES.indexOf(s as (typeof SEVERITIES)[
 
 /**
  * Stores a finished scan in one transaction: the software found (site_components), the
- * findings linked to those components and to ontology concepts, and the scan summary.
- * Report text comes from the ontology so every finding explains itself.
+ * findings linked to those components and to ontology concepts, which findings a free
+ * user may see in full, and the score and grade.
  */
-export async function saveOutcome(db: Database, scanId: string, siteId: string, outcome: ScanOutcome): Promise<void> {
+export async function saveOutcome(db: Database, scanId: string, siteId: string, outcome: ScanOutcome): Promise<{ score: number; grade: string }> {
+  const ordered = [...outcome.findings]
+    .map((f) => ({ ...f, indicatesCompromise: (EXPOSURES[f.conceptId] as ExposureDef).indicatesCompromise === true }))
+    .sort((a, b) => severityRank(a.severity) - severityRank(b.severity) || a.title.localeCompare(b.title));
+  const freeVisible = selectFreeVisible(ordered);
+  const { score, grade } = computeScore(ordered);
+
   await db.transaction(async (tx) => {
     const componentIds = new Map<string, string>();
     if (outcome.components.length > 0) {
@@ -34,12 +41,10 @@ export async function saveOutcome(db: Database, scanId: string, siteId: string, 
       for (const r of rows) componentIds.set(`${r.type}:${r.slug}`, r.id);
     }
 
-    const ordered = [...outcome.findings].sort((a, b) => severityRank(a.severity) - severityRank(b.severity) || a.title.localeCompare(b.title));
     if (ordered.length > 0) {
       await tx.insert(findingsTable).values(
         ordered.map((f, index) => {
           const text = describeExposure(f.conceptId);
-          const concept = EXPOSURES[f.conceptId];
           return {
             scanId,
             checkId: f.checkId,
@@ -52,9 +57,9 @@ export async function saveOutcome(db: Database, scanId: string, siteId: string, 
             explanation: text.explanation,
             fixSteps: text.fixSteps,
             references: [...(f.references ?? []), ...standardReferences(f.conceptId)],
-            indicatesCompromise: 'indicatesCompromise' in concept && concept.indicatesCompromise === true,
-            // Free/paid visibility is decided by the report phase.
-            visibleInFree: false,
+            indicatesCompromise: f.indicatesCompromise,
+            visibleInFree: freeVisible.has(index),
+            attribution: f.attribution ?? null,
             sortOrder: index,
           };
         }),
@@ -70,7 +75,10 @@ export async function saveOutcome(db: Database, scanId: string, siteId: string, 
         baseUrl: outcome.baseUrl,
         moduleResults: outcome.modules,
         ontologyVersion: outcome.ontologyVersion,
+        score,
+        grade,
       })
       .where(eq(scans.id, scanId));
   });
+  return { score, grade };
 }

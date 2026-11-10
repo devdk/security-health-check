@@ -33,7 +33,10 @@ export function AppLayout() {
           <span>Security Health Check</span>
         </Link>
         <div className="topbar-user">
-          <span className="muted topbar-email">{state.user.email}</span>
+          <Link to="/account" className="topbar-account">
+            <span className="muted topbar-email">{state.user.email}</span>
+            <span className={`badge badge-${state.user.plan}`}>{state.user.plan === 'pro' ? 'Pro' : 'Free'}</span>
+          </Link>
           <button type="button" className="btn btn-ghost" onClick={onLogout}>
             Sign out
           </button>

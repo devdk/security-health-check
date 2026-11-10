@@ -84,6 +84,9 @@ describe('processScan', () => {
 
     const [saved] = await handle.db.select().from(scans).where(eq(scans.id, scan.id));
     expect(saved).toMatchObject({ status: 'completed', baseUrl: 'https://example.com', requestCount: 7, error: null });
+    // One critical (CF7) caps the score at 49: an F.
+    expect(saved!.score).toBeLessThanOrEqual(49);
+    expect(saved!.grade).toBe('F');
     expect(saved!.ontologyVersion).toBeTruthy();
     expect(saved!.moduleResults?.map((m) => m.status)).toEqual(['ok', 'ok', 'ok']);
 
@@ -114,7 +117,10 @@ describe('processScan', () => {
         expect.objectContaining({ id: 'CWE-1395' }),
       ]),
     );
-    expect(rows.every((f) => f.visibleInFree === false && f.indicatesCompromise === false)).toBe(true);
+    // A third of the findings (rounded up) are chosen for free users, most severe first.
+    expect(rows.map((f) => f.visibleInFree)).toEqual([true, false, false]);
+    expect(rows.every((f) => f.indicatesCompromise === false)).toBe(true);
+    expect(vuln.attribution).toMatchObject({ source: 'wordfence' });
 
     const events = (await handle.db.select().from(auditEvents)).map((e) => e.event);
     expect(events).toContain('scan_completed');

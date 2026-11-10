@@ -90,11 +90,16 @@ services:
       API_PORT: "3000"
       # Exactly one proxy (nginx) sits in front. The API port is not published to the host.
       TRUST_PROXY_HOPS: "1"
+      PDF_SERVICE_URL: http://pdf:3000
+      # Instant, free plan changes for development. Refused when APP_ENV=production.
+      PAYMENTS_PROVIDER: ${PAYMENTS_PROVIDER:-stub}
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+      pdf:
+        condition: service_started
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
@@ -122,6 +127,21 @@ services:
       redis:
         condition: service_healthy
     <<: *hardening
+
+  # HTML-to-PDF with headless Chromium (Gotenberg, MIT). Internal only: no published port.
+  # JavaScript is off and Chromium may only load the files Gotenberg writes to /tmp, so
+  # report content can't make it fetch anything.
+  pdf:
+    image: gotenberg/gotenberg:8
+    restart: unless-stopped
+    command:
+      - gotenberg
+      - --chromium-disable-javascript=true
+      - --chromium-allow-list=^file:///tmp/.*
+      - --api-timeout=45s
+      - --log-level=warn
+    security_opt:
+      - no-new-privileges:true
 
   web:
     image: shc-web:local

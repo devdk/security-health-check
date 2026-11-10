@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import { AuthProvider } from './auth';
 import { AppLayout, GuestOnly } from './components/AppLayout';
+import { AccountPage } from './pages/AccountPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { LoginPage } from './pages/LoginPage';
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: 'sites/:siteId', element: <SiteDetailPage /> },
       { path: 'scans/:scanId', element: <ScanPage /> },
+      { path: 'account', element: <AccountPage /> },
     ],
   },
   { path: '/scanner', element: <ScannerPage /> },

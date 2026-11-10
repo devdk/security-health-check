@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { api, errorMessage, type ScanSummary, type Site, type VerifyMethod } from '../api';
+import { useAuth } from '../auth';
 import { isActive, ScanStatusBadge, SeverityCounts, usePolling } from '../components/scans';
 import { CopyField, formatDate, StatusBadge } from '../components/sites';
 import { Alert } from '../components/ui';
@@ -72,7 +73,7 @@ export function SiteDetailPage() {
         <VerifyPanel site={site} onUpdate={setSite} />
       )}
 
-      <ScansPanel site={site} />
+      <ScansPanel site={site} onUpdate={setSite} />
 
       <section className="card danger-zone">
         <h2>Remove site</h2>
@@ -85,15 +86,55 @@ export function SiteDetailPage() {
   );
 }
 
-function ScansPanel({ site }: { site: Site }) {
+function WeeklyScanToggle({ site, onUpdate }: { site: Site; onUpdate: (site: Site) => void }) {
+  const { state } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const pro = state.status === 'signed-in' && state.user.plan === 'pro';
+
+  async function toggle() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await api<{ site: Site }>(`/sites/${site.id}`, { method: 'PATCH', body: { weeklyScan: !site.weeklyScan } });
+      onUpdate(res.site);
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="weekly">
+      <label className="switch">
+        <input type="checkbox" checked={site.weeklyScan} onChange={toggle} disabled={busy || (!pro && !site.weeklyScan)} />
+        <span>Scan automatically every week</span>
+      </label>
+      {site.weeklyScan && site.nextScanAt && <span className="muted small">Next scan around {formatDate(site.nextScanAt)}</span>}
+      {!pro && !site.weeklyScan && (
+        <span className="muted small">
+          Weekly scans are part of <Link to="/account">Pro</Link>.
+        </span>
+      )}
+      {error && <Alert tone="error">{error}</Alert>}
+    </div>
+  );
+}
+
+function ScansPanel({ site, onUpdate }: { site: Site; onUpdate: (site: Site) => void }) {
   const navigate = useNavigate();
   const [scans, setScans] = useState<ScanSummary[] | null>(null);
+  const [historyLimited, setHistoryLimited] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    api<{ scans: ScanSummary[] }>(`/sites/${site.id}/scans`)
-      .then((res) => setScans(res.scans))
+    api<{ scans: ScanSummary[]; historyLimited: boolean }>(`/sites/${site.id}/scans`)
+      .then((res) => {
+        setScans(res.scans);
+        setHistoryLimited(res.historyLimited);
+      })
       .catch((err) => setError(errorMessage(err)));
   }, [site.id]);
 
@@ -131,13 +172,26 @@ function ScansPanel({ site }: { site: Site }) {
           {scans.map((s) => (
             <li key={s.id} className="scan-row">
               <Link to={`/scans/${s.id}`}>{formatDate(s.createdAt)}</Link>
-              <ScanStatusBadge status={s.status} />
+              {s.status === 'completed' && s.grade ? (
+                <span className={`grade-chip grade-${s.grade}`} title={`Score ${s.score} / 100`}>
+                  {s.grade}
+                </span>
+              ) : (
+                <ScanStatusBadge status={s.status} />
+              )}
               {s.status === 'completed' && <SeverityCounts counts={s.findingCounts} />}
+              {s.trigger === 'scheduled' && <span className="muted small">weekly</span>}
               {s.status === 'failed' && s.error && <span className="muted small">{s.error}</span>}
             </li>
           ))}
         </ul>
       )}
+      {historyLimited && (
+        <p className="muted small">
+          Older scans are kept on <Link to="/account">Pro</Link>.
+        </p>
+      )}
+      {canScan && <WeeklyScanToggle site={site} onUpdate={onUpdate} />}
     </section>
   );
 }

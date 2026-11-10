@@ -27,6 +27,7 @@ export class DbVulnLookup implements VulnLookup {
       references: r.references,
       informational: r.informational,
       recordUrl: r.recordUrl,
+      copyrights: r.copyrights,
     }));
   }
 }

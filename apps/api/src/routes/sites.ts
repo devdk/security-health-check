@@ -17,6 +17,8 @@ const Site = Type.Object({
   lastVerifyAttemptAt: Nullable(Type.String()),
   lastVerifyError: Nullable(Type.String()),
   createdAt: Type.String(),
+  weeklyScan: Type.Boolean(),
+  nextScanAt: Nullable(Type.String()),
   instructions: Type.Object({
     dns: Type.Object({ name: Type.String(), type: Type.Literal('TXT'), value: Type.String() }),
     file: Type.Object({ filename: Type.String(), url: Type.String(), content: Type.String() }),
@@ -63,6 +65,18 @@ export const siteRoutes: FastifyPluginAsyncTypebox<{ sites: SiteService }> = asy
       },
     },
     async (req) => sites.verify(owner(req), req.params.siteId, req.body.method, requestContext(req)),
+  );
+
+  app.patch(
+    '/:siteId',
+    {
+      schema: {
+        params: SiteParams,
+        body: Type.Object({ weeklyScan: Type.Boolean() }, strict),
+        response: { 200: Type.Object({ site: Site }) },
+      },
+    },
+    async (req) => ({ site: await sites.setWeeklyScan(owner(req), req.params.siteId, req.body.weeklyScan, requestContext(req)) }),
   );
 
   app.delete('/:siteId', { schema: { params: SiteParams, response: { 204: Type.Null() } } }, async (req, reply) => {

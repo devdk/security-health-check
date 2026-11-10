@@ -32,6 +32,8 @@ export const ScanSummary = Type.Object({
   requestCount: Type.Integer(),
   baseUrl: Nullable(Type.String()),
   error: Nullable(Type.String()),
+  score: Nullable(Type.Integer()),
+  grade: Nullable(Type.String()),
   findingCounts: Counts,
 });
 
@@ -87,9 +89,11 @@ export const siteScanRoutes: FastifyPluginAsyncTypebox<{ scans: ScanService }> =
     },
   );
 
-  app.get('/:siteId/scans', { schema: { params: SiteParams, response: { 200: Type.Object({ scans: Type.Array(ScanSummary) }) } } }, async (req) => ({
-    scans: await scans.listForSite(owner(req), req.params.siteId),
-  }));
+  app.get(
+    '/:siteId/scans',
+    { schema: { params: SiteParams, response: { 200: Type.Object({ scans: Type.Array(ScanSummary), historyLimited: Type.Boolean() }) } } },
+    async (req) => scans.listForSite(owner(req), req.params.siteId),
+  );
 };
 
 /** Mounted under /api/scans. */

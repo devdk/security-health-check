@@ -1,5 +1,5 @@
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
-import { createScanRequest, markScanFailed, type ScanQueue } from '@shc/core';
+import { createScanRequest, markScanFailed, planFor, type ScanQueue } from '@shc/core';
 import { findings, scans, siteComponents, sites, type Database, type ModuleResult } from '@shc/db';
 import type { OwnershipChecker } from '@shc/net';
 import { SEVERITIES, type Confidence, type ScanStatus, type ScanTrigger, type Severity, type SoftwareType } from '@shc/shared';
@@ -19,6 +19,8 @@ export interface ScanSummaryDto {
   requestCount: number;
   baseUrl: string | null;
   error: string | null;
+  score: number | null;
+  grade: string | null;
   findingCounts: SeverityCounts;
 }
 
@@ -44,6 +46,8 @@ function toSummary(row: ScanRow, counts: SeverityCounts = emptyCounts()): ScanSu
     requestCount: row.requestCount,
     baseUrl: row.baseUrl,
     error: row.error,
+    score: row.score,
+    grade: row.grade,
     findingCounts: counts,
   };
 }
@@ -107,11 +111,19 @@ export class ScanService {
     return { scan: toSummary(result.scan) };
   }
 
-  async listForSite(ownerId: string, siteId: string): Promise<ScanSummaryDto[]> {
+  /** Pro sees the last 20 scans. Free sees the newest scan and the newest completed one. */
+  async listForSite(ownerId: string, siteId: string): Promise<{ scans: ScanSummaryDto[]; historyLimited: boolean }> {
     await this.ownedSite(ownerId, siteId);
-    const rows = await this.deps.db.select().from(scans).where(eq(scans.siteId, siteId)).orderBy(desc(scans.createdAt)).limit(20);
+    const plan = await planFor(this.deps.db, ownerId);
+    let rows = await this.deps.db.select().from(scans).where(eq(scans.siteId, siteId)).orderBy(desc(scans.createdAt)).limit(20);
+    let historyLimited = false;
+    if (plan !== 'pro' && rows.length > 0) {
+      const keep = new Set([rows[0]!.id, rows.find((r) => r.status === 'completed')?.id].filter(Boolean));
+      historyLimited = rows.length > keep.size;
+      rows = rows.filter((r) => keep.has(r.id));
+    }
     const counts = await this.counts(rows.map((r) => r.id));
-    return rows.map((r) => toSummary(r, counts.get(r.id)));
+    return { scans: rows.map((r) => toSummary(r, counts.get(r.id))), historyLimited };
   }
 
   async get(ownerId: string, scanId: string): Promise<ScanDetailDto> {

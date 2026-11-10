@@ -17,6 +17,7 @@
     "@shc/intel": "0.1.0",
     "@shc/net": "0.1.0",
     "@shc/ontology": "0.1.0",
+    "@shc/report": "0.1.0",
     "@shc/scanner": "0.1.0",
     "@shc/shared": "0.1.0",
     "bullmq": "^6.7.2",

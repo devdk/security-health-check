@@ -3,13 +3,14 @@ import { sql } from 'drizzle-orm';
 import { Redis } from 'ioredis';
 import { pino } from 'pino';
 import { ConfigError, loadConfig } from '@shc/config';
-import { markScanFailed, redisConnection, SCAN_QUEUE, type ScanJobData } from '@shc/core';
+import { BullScanQueue, markScanFailed, redisConnection, SCAN_QUEUE, type ScanJobData } from '@shc/core';
 import { createDb } from '@shc/db';
 import { DbReleaseLookup, DbVulnLookup } from '@shc/intel';
 import { createTxtResolver, OwnershipVerifier, SafeFetcher, TlsProber } from '@shc/net';
 import { RedisRateLimiter } from '@shc/scanner';
 import { startIntelJobs } from './intel-jobs';
 import { failStuckScans, processScan, type ProcessDeps } from './process-scan';
+import { startWeeklyScans } from './weekly-scans';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -37,6 +38,15 @@ async function main(): Promise<void> {
   };
 
   const intel = await startIntelJobs({ db: dbHandle.db, config, connection: redisConnection(config.redisUrl), log });
+  const scanQueue = new BullScanQueue(redisConnection(config.redisUrl));
+  const weekly = await startWeeklyScans({
+    db: dbHandle.db,
+    connection: redisConnection(config.redisUrl),
+    ownership: deps.ownership,
+    queue: scanQueue,
+    cooldownMinutes: config.scan.cooldownMinutes,
+    log,
+  });
 
   const worker = new Worker<ScanJobData>(SCAN_QUEUE, async (job) => processScan(job.data.scanId, deps), {
     connection: redisConnection(config.redisUrl),
@@ -67,6 +77,8 @@ async function main(): Promise<void> {
     clearInterval(sweeper);
     await worker.close().catch(() => undefined);
     await intel.close().catch(() => undefined);
+    await weekly.close().catch(() => undefined);
+    await scanQueue.close().catch(() => undefined);
     await redis.quit().catch(() => undefined);
     await dbHandle.close().catch(() => undefined);
     process.exit(0);

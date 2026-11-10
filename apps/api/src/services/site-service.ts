@@ -1,5 +1,5 @@
-import { and, asc, eq } from 'drizzle-orm';
-import { audit, countSites, newVerificationToken, runVerification } from '@shc/core';
+import { and, asc, eq, sql } from 'drizzle-orm';
+import { audit, countSites, newVerificationToken, planFor, runVerification } from '@shc/core';
 import { sites, subscriptions, type Database } from '@shc/db';
 import { ownershipInstructions, type OwnershipChecker, type OwnershipInstructions } from '@shc/net';
 import { effectivePlan, normaliseDomain, siteStatus, SITE_LIMITS, type SiteStatus, type VerifyMethod } from '@shc/shared';
@@ -17,6 +17,8 @@ export interface SiteDto {
   lastVerifyAttemptAt: string | null;
   lastVerifyError: string | null;
   createdAt: string;
+  weeklyScan: boolean;
+  nextScanAt: string | null;
   instructions: OwnershipInstructions;
 }
 
@@ -32,6 +34,8 @@ export function toSiteDto(row: SiteRow): SiteDto {
     lastVerifyAttemptAt: iso(row.lastVerifyAttemptAt),
     lastVerifyError: row.lastVerifyError,
     createdAt: row.createdAt.toISOString(),
+    weeklyScan: row.weeklyScan,
+    nextScanAt: iso(row.nextScanAt),
     instructions: ownershipInstructions(row.domain, row.verificationToken),
   };
 }
@@ -109,6 +113,22 @@ export class SiteService {
       message: result.ok ? `Ownership confirmed. ${result.detail}.` : result.reason,
       site: toSiteDto(updated),
     };
+  }
+
+  /** Weekly scans are a Pro feature; anyone may switch them off. The first runs a week from now. */
+  async setWeeklyScan(ownerId: string, siteId: string, enabled: boolean, ctx: RequestContext): Promise<SiteDto> {
+    const { db } = this.deps;
+    await this.row(ownerId, siteId);
+    if (enabled && (await planFor(db, ownerId)) !== 'pro') {
+      throw new HttpError(403, 'upgrade_required', 'Weekly scans are part of the Pro plan.');
+    }
+    const [row] = await db
+      .update(sites)
+      .set({ weeklyScan: enabled, nextScanAt: enabled ? sql`now() + interval '7 days'` : null })
+      .where(and(eq(sites.id, siteId), eq(sites.ownerId, ownerId)))
+      .returning();
+    await audit(db, { event: 'weekly_scan_changed', userId: ownerId, siteId, ip: ctx.ip, meta: { enabled } });
+    return toSiteDto(row!);
   }
 
   async remove(ownerId: string, siteId: string, ctx: RequestContext): Promise<void> {

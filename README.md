@@ -2,7 +2,37 @@
 
 An attacker's-eye security audit for WordPress sites. Owners add a site, prove they own it, and get a scored security report. A companion WordPress plugin adds an inside-view audit.
 
-> **Status: Phase 4.** Done: scaffold, auth, site management, ownership verification, the security ontology, the scan queue and worker, all external checks, and the vulnerability intelligence cache with a daily refresh. Reports, scoring and free/paid visibility come next. A full README follows in the hardening phase.
+> **Status: Phase 5.** Done: scaffold, auth, site management, ownership verification, the security ontology, the scan queue and worker, all external checks, the daily vulnerability intelligence, scoring, reports with free/paid visibility, PDF export, plans (stub payments), weekly scans and fix requests. The companion plugin comes next. A full README follows in the hardening phase.
+
+## Reports, scores and plans
+
+**Score and grade** (`packages/report/src/score.ts`): every finding takes points off 100 according to its severity: critical 30, high 15, medium 6, low 2, info 0. The deduction is scaled by confidence (confirmed ×1, likely ×0.8, possible ×0.5), and repeats of the same problem count less each time. Caps keep the grade honest:
+- a possible compromise caps the score at 19 (F);
+- a confirmed or likely critical caps it at 49 (F);
+- a confirmed or likely high caps it at 74 (C).
+
+Grades are A 90+, B 80+, C 70+, D 60+, otherwise F. The score is stored on the scan when it finishes.
+
+**Free vs Pro**: the full scan always runs, and the API decides what is visible at read time (`buildReportView`). The dashboard never decides.
+
+| | Free | Pro |
+|---|---|---|
+| Score, grade, counts per severity | ✓ | ✓ |
+| Findings in full | about a third, chosen round-robin across severities when the scan finishes | all |
+| Other findings | locked: only severity and area (e.g. "Publicly served files") are sent | – |
+| Possible-compromise findings | title, explanation and evidence always shown; fix locked | full |
+| Step-by-step fix guides | for the findings shown | ✓ |
+| PDF export, scan history, weekly scans, "request a fix" | – | ✓ |
+
+Locked findings are built field by field and the response schema forbids extra fields, so nothing else can leak. Tests check the raw response bodies.
+
+**Payments**: the `PaymentProvider` interface (`packages/core/src/billing.ts`) has a **stub** for development, which switches plans instantly from the Account page, and **none**. The stub is refused in production by config; a real provider (Stripe, Paddle…) plugs in behind the same interface.
+
+**PDF export**: the report is rendered to self-contained HTML (inline CSS, no scripts, every value escaped). Headless Chromium in the `pdf` container (Gotenberg, MIT) then prints it, with JavaScript disabled and network access limited to its own temp files.
+
+**Attribution**: findings from Wordfence keep the record link and the Defiant and MITRE notices. Findings from NVD carry the NVD notice. The report and the PDF show them in a "Data sources" section.
+
+**Weekly scans**: Pro sites can opt in. A scheduler checks every 10 minutes, and each scheduled scan follows the same rules as a manual one (re-verified ownership, one scan at a time, cooldown). Weekly scans switch off when the owner leaves Pro.
 
 ## Vulnerability intelligence
 
@@ -157,6 +187,7 @@ packages/net    SSRF-safe HTTP client, IP policy, DNS, ownership checks
 packages/ontology  Security ontology: exposures, CWE/CAPEC mappings, controls, remediations, JSON-LD export
 packages/scanner   Scan engine, polite HTTP client, rate limiter, check modules, recorded fixtures
 packages/intel     Vulnerability source adapters (Wordfence, NVD, OSV slot), WordPress.org release data, sync jobs
+packages/report    Score and grade, free-plan selection, reveal logic (free vs Pro), report HTML for PDF
 packages/shared Domain constants and validation shared by every app (incl. the browser)
 docker/         Dockerfiles and nginx config
 scripts/        Build and setup helpers

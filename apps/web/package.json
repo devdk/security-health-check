@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
+    "@shc/report": "0.1.0",
     "@shc/shared": "0.1.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

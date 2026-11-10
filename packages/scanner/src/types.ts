@@ -37,8 +37,21 @@ export interface Reference {
   url?: string;
 }
 
+export interface CopyrightHolders {
+  message?: string;
+  holders: Record<string, { notice: string; license: string; licenseUrl: string }>;
+}
+
+/** Where third-party vulnerability data came from, and the notices its licence requires. */
+export interface Attribution {
+  source: string;
+  recordUrl: string | null;
+  copyrights: CopyrightHolders | null;
+}
+
 /** What a check module reports. Text for the report comes from the ontology. */
 export interface Finding {
+  attribution?: Attribution;
   /** '<module>.<specific check>', e.g. 'wp-detect.version-disclosed' */
   checkId: string;
   conceptId: ExposureId;
@@ -64,6 +77,7 @@ export interface VulnRecord {
   informational?: boolean;
   /** Link to the source's record; shown with the finding for attribution. */
   recordUrl?: string | null;
+  copyrights?: CopyrightHolders | null;
 }
 
 /** Read access to the local vulnerability cache. */

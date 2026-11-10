@@ -18,6 +18,7 @@
     "@shc/core": "0.1.0",
     "@shc/db": "0.1.0",
     "@shc/net": "0.1.0",
+    "@shc/report": "0.1.0",
     "@shc/shared": "0.1.0",
     "argon2": "^0.45.2",
     "bullmq": "^6.7.2",

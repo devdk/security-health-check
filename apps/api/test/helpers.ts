@@ -7,6 +7,7 @@ import type { ScanQueue } from '@shc/core';
 import type { OwnershipChecker, OwnershipResult } from '@shc/net';
 import type { VerifyMethod } from '@shc/shared';
 import { buildApp, type App } from '../src/app';
+import type { PdfRenderer } from '../src/lib/pdf';
 import { MemoryMailer } from '../src/lib/mailer';
 
 export const ORIGIN = 'http://localhost:5173';
@@ -48,7 +49,7 @@ export class FakeQueue implements ScanQueue {
 }
 
 export async function createTestContext(
-  options: { rateLimit?: Partial<Config['rateLimit']>; ownership?: OwnershipChecker; scanQueue?: ScanQueue } = {},
+  options: { rateLimit?: Partial<Config['rateLimit']>; ownership?: OwnershipChecker; scanQueue?: ScanQueue; pdf?: PdfRenderer } = {},
 ): Promise<TestContext> {
   const rateLimit = options.rateLimit ?? {};
   const base = loadConfig({
@@ -72,6 +73,7 @@ export async function createTestContext(
     mailer,
     ownership: options.ownership ?? new FakeOwnership(),
     scanQueue: options.scanQueue ?? new FakeQueue(),
+    pdf: options.pdf,
     logger: false,
   });
   await app.ready();

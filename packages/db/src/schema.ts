@@ -273,6 +273,8 @@ export const findings = pgTable(
     indicatesCompromise: boolean('indicates_compromise').notNull().default(false),
     /** Chosen when the scan finishes; the API applies it at read time based on plan. */
     visibleInFree: boolean('visible_in_free').notNull().default(false),
+    /** Source and licence notices for third-party vulnerability data (Wordfence, NVD). */
+    attribution: jsonb('attribution').$type<{ source: string; recordUrl: string | null; copyrights: VulnCopyrights | null } | null>(),
     sortOrder: integer('sort_order').notNull().default(0),
     createdAt: createdAt(),
   },

@@ -11,14 +11,16 @@
  * per second and always identified itself.
  */
 import { execFileSync } from 'node:child_process';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = process.env.E2E_BASE_URL ?? 'http://localhost:8080';
 const DOMAIN = 'wordpress.test';
-const email = `e2e+${Date.now()}@example.com`;
-const password = `e2e-${Date.now()}-passphrase`;
+// E2E_EMAIL / E2E_PASSWORD let you keep the account afterwards (e.g. to look around the dashboard).
+const email = process.env.E2E_EMAIL ?? `e2e+${Date.now()}@example.com`;
+const password = process.env.E2E_PASSWORD ?? `e2e-${Date.now()}-passphrase`;
 let cookie = '';
 let failures = 0;
 
@@ -117,6 +119,33 @@ try {
   }
   const leaked = psql(`select count(*) from findings where scan_id = '${scan.id}' and (evidence::text like '%not-a-real-password%' or evidence::text like '%shc-admin%')`);
   step('no secrets or full usernames stored in evidence', leaked === '0');
+
+  // Report: free view first.
+  const freeRes = await fetch(`${BASE}/api/scans/${scan.id}/report`, { headers: { cookie } });
+  const freeBody = await freeRes.text();
+  const free = JSON.parse(freeBody).report;
+  console.log(`\n  report: ${free.score}/100 grade ${free.grade}; free plan shows ${free.findings.length - free.lockedCount} of ${free.findings.length} findings`);
+  step('report scored and graded', Number.isInteger(free.score) && /^[A-F]$/.test(free.grade), `${free.score} ${free.grade}`);
+  step('free plan locks about two thirds', free.lockedCount > 0 && free.lockedCount < free.findings.length, `${free.lockedCount} locked`);
+  const lockedOnly = free.findings.filter((f) => f.locked).every((f) => Object.keys(f).sort().join(',') === 'category,id,locked,severity');
+  step('locked findings carry only severity and area', lockedOnly);
+  const lockedTitles = psql(`select string_agg(title, '|') from findings where scan_id = '${scan.id}' and not visible_in_free and not indicates_compromise`).split('|');
+  step('no locked title appears anywhere in the free response', lockedTitles.every((t) => t && !freeBody.includes(t)));
+  const pdfFree = await fetch(`${BASE}/api/scans/${scan.id}/report.pdf`, { headers: { cookie } });
+  step('PDF is refused on the free plan', pdfFree.status === 403);
+
+  // Upgrade through the payment stub, then the full report and a real PDF.
+  const up = await call('POST', '/api/billing/upgrade', { plan: 'pro' });
+  step('upgraded to Pro (test-mode payment stub)', up.body?.billing?.plan === 'pro');
+  const pro = (await call('GET', `/api/scans/${scan.id}/report`)).body.report;
+  step('Pro sees every finding with fix guides', pro.lockedCount === 0 && pro.findings.every((f) => !f.locked && f.fix?.length > 0));
+  step('NVD notice included for PHP data', pro.dataSources.some((d) => d.id === 'nvd' && /not endorsed or certified/.test(d.notice)));
+  const pdfRes = await fetch(`${BASE}/api/scans/${scan.id}/report.pdf`, { headers: { cookie } });
+  const pdf = Buffer.from(await pdfRes.arrayBuffer());
+  const out = path.join(root, '.e2e', 'report.pdf');
+  mkdirSync(path.dirname(out), { recursive: true });
+  writeFileSync(out, pdf);
+  step('PDF rendered by headless Chromium', pdfRes.status === 200 && pdf.subarray(0, 5).toString() === '%PDF-' && pdf.length > 20_000, `${Math.round(pdf.length / 1024)} KB -> ${path.relative(root, out)}`);
 
   // 5. Politeness, measured from the target's side: Apache's access log.
   const accessLog = compose('logs', 'testwp', '--no-log-prefix', '--since', scanStart);

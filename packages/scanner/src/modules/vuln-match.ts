@@ -72,6 +72,7 @@ export const vulnMatch: CheckModule = {
         findings.push({
           checkId: `vuln-match.${component.type}`,
           conceptId: 'exposure/known-vulnerable-component',
+          attribution: { source: ordered[0]!.source, recordUrl: null, copyrights: null },
           severity: severityOf(ordered[0]!),
           title: `${displayName(component)} ${component.version} is affected by ${matches.length} known vulnerabilit${matches.length === 1 ? 'y' : 'ies'}`,
           confidence: matchConfidence(component),
@@ -92,6 +93,7 @@ export const vulnMatch: CheckModule = {
         findings.push({
           checkId: `vuln-match.${v.source}`,
           conceptId: 'exposure/known-vulnerable-component',
+          attribution: { source: v.source, recordUrl: v.recordUrl ?? null, copyrights: v.copyrights ?? null },
           severity: severityOf(v),
           title: `${displayName(component)} ${component.version}: ${v.title}`,
           confidence: matchConfidence(component),

@@ -28,10 +28,24 @@ export interface Site {
   lastVerifyAttemptAt: string | null;
   lastVerifyError: string | null;
   createdAt: string;
+  weeklyScan: boolean;
+  nextScanAt: string | null;
   instructions: {
     dns: { name: string; type: 'TXT'; value: string };
     file: { filename: string; url: string; content: string };
   };
+}
+
+// Report types come from the server package, type-only, so the shapes can't drift.
+export type { LockedFinding, ReportFinding, ReportView, RevealedFinding } from '@shc/report';
+
+export interface Billing {
+  plan: 'free' | 'pro';
+  status: string;
+  provider: string;
+  currentPeriodEnd: string | null;
+  upgradesAvailable: boolean;
+  testMode: boolean;
 }
 
 export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
@@ -48,6 +62,8 @@ export interface ScanSummary {
   requestCount: number;
   baseUrl: string | null;
   error: string | null;
+  score: number | null;
+  grade: string | null;
   findingCounts: Record<Severity, number>;
 }
 

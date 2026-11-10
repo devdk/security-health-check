@@ -18,7 +18,12 @@ export type AuditEventName =
   | 'site_reverify_failed'
   | 'scan_requested'
   | 'scan_completed'
-  | 'scan_failed';
+  | 'scan_failed'
+  | 'plan_changed'
+  | 'weekly_scan_changed'
+  | 'scheduled_scan_skipped'
+  | 'fix_requested'
+  | 'report_exported';
 
 export interface AuditInput {
   event: AuditEventName;

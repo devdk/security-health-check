@@ -58,6 +58,14 @@ export interface Config {
     concurrency: number;
     timeoutSeconds: number;
   };
+  payments: {
+    /** 'stub' upgrades instantly (development only); 'none' disables upgrades. */
+    provider: 'stub' | 'none';
+  };
+  pdf: {
+    /** Base URL of the HTML-to-PDF service (Gotenberg). Null disables PDF export. */
+    serviceUrl: string | null;
+  };
   intel: {
     /** Free key from wordfence.com → Account → Integrations. Without it the Wordfence feed is skipped. */
     wordfenceApiKey: string | null;
@@ -212,6 +220,12 @@ export function loadConfig(env: Env = process.env): Config {
       concurrency: r.int('SCAN_CONCURRENCY', 3, 1, 20),
       timeoutSeconds: r.int('SCAN_TIMEOUT_SECONDS', 300, 30, 1800),
     },
+    payments: {
+      provider: r.oneOf('PAYMENTS_PROVIDER', ['stub', 'none'] as const, isProd ? 'none' : 'stub'),
+    },
+    pdf: {
+      serviceUrl: env.PDF_SERVICE_URL?.trim() ? r.url('PDF_SERVICE_URL', ['http:', 'https:']).replace(/\/+$/, '') : null,
+    },
     intel: {
       wordfenceApiKey: env.WORDFENCE_API_KEY?.trim() || null,
       nvdApiKey: env.NVD_API_KEY?.trim() || null,
@@ -235,6 +249,7 @@ export function loadConfig(env: Env = process.env): Config {
     if (!config.session.cookieSecure) r.problems.push('COOKIE_SECURE must be true in production');
     if (!config.web.baseUrl.startsWith('https://')) r.problems.push('WEB_BASE_URL must use https in production');
     if (config.scanner.allowPrivateHosts.length > 0) r.problems.push('SCAN_ALLOW_PRIVATE_HOSTS must be empty in production');
+    if (config.payments.provider === 'stub') r.problems.push('PAYMENTS_PROVIDER=stub hands out Pro for free; it is not allowed in production');
   }
 
   if (r.problems.length > 0) throw new ConfigError(r.problems);

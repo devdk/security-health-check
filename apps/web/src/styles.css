@@ -602,6 +602,243 @@ form {
   padding-left: 0;
 }
 
+/* Report */
+.report-header {
+  align-items: center;
+}
+.score-badge {
+  display: grid;
+  justify-items: center;
+  min-width: 7.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 2px solid currentColor;
+  border-radius: 14px;
+  background: var(--surface);
+}
+.score-grade {
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.score-num {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.grade-A,
+.grade-B {
+  color: var(--success-text);
+}
+.grade-C {
+  color: var(--warn-text);
+}
+.grade-D,
+.grade-F {
+  color: var(--danger-text);
+}
+.grade-chip {
+  font-weight: 800;
+  border: 1.5px solid currentColor;
+  border-radius: 6px;
+  padding: 0 0.45rem;
+  font-size: 0.9rem;
+}
+.report-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+.upsell {
+  border-color: var(--brand);
+}
+.upsell h2 {
+  margin-bottom: 0.25rem;
+}
+.upsell .btn {
+  margin-top: 0.75rem;
+  display: inline-block;
+  text-decoration: none;
+}
+.findings {
+  display: grid;
+  gap: 0.6rem;
+}
+.finding {
+  padding: 0;
+  border-left-width: 4px;
+  overflow: hidden;
+}
+.finding-critical {
+  border-left-color: var(--sev-critical-bg);
+}
+.finding-high {
+  border-left-color: var(--danger-text);
+}
+.finding-medium {
+  border-left-color: var(--warn-text);
+}
+.finding-low {
+  border-left-color: var(--info-text);
+}
+.finding-info {
+  border-left-color: var(--border);
+}
+.finding-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  background: none;
+  border: none;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.finding-locked .finding-head {
+  cursor: default;
+}
+.finding-title {
+  flex: 1;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.finding-cat {
+  white-space: nowrap;
+}
+.finding-body {
+  padding: 0 1.1rem 1rem;
+  display: grid;
+  gap: 0.6rem;
+}
+.finding-body > p {
+  margin: 0;
+}
+.finding-body h4 {
+  margin: 0.25rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+.blurred {
+  filter: blur(5px);
+  user-select: none;
+}
+.locked-row,
+.locked-inline {
+  padding: 0 1.1rem 0.9rem;
+  font-size: 0.92rem;
+}
+.locked-inline {
+  padding: 0.6rem 0.75rem;
+  background: var(--bg);
+  border-radius: 8px;
+}
+.evidence dl {
+  margin: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+.evidence-row {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 0.75rem;
+  font-size: 0.92rem;
+}
+.evidence-row dt {
+  color: var(--muted);
+  text-transform: capitalize;
+}
+.evidence-row dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.vuln-list {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.92rem;
+  display: grid;
+  gap: 0.2rem;
+}
+.fix .guide ol {
+  margin: 0.25rem 0 0.75rem;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.25rem;
+}
+.fix .guide p {
+  margin: 0;
+}
+.fix-note {
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+.refs {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0;
+}
+.attribution {
+  margin: 0;
+}
+.fix-request {
+  display: grid;
+  gap: 0.4rem;
+}
+.fix-request .actions {
+  margin-top: 0;
+}
+.source + .source {
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+.license summary {
+  cursor: pointer;
+}
+
+/* Account */
+.plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+.plan ul {
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.3rem;
+}
+.plan-current {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px var(--brand);
+}
+.topbar-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  min-width: 0;
+}
+.weekly {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 550;
+}
+.switch input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--brand);
+}
+
 /* Public prose pages */
 .prose-shell {
   max-width: 720px;

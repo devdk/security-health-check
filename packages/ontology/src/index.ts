@@ -1,8 +1,10 @@
 import { EXPOSURES, type ExposureDef, type ExposureId } from './exposures';
 import { ATTACK_PATTERNS, capecUrl, cweUrl, OWASP_TOP10_2021, WEAKNESSES, type AttackPatternId, type WeaknessId } from './standards';
+import { GUIDES } from './guides';
 import { COMPONENTS, CONTROLS, REMEDIATIONS, type ComponentId, type ControlId, type RemediationId } from './vocabulary';
 
 export * from './exposures';
+export * from './guides';
 export * from './standards';
 export * from './vocabulary';
 
@@ -19,17 +21,29 @@ export function getExposure(id: ExposureId): ExposureDef {
   return EXPOSURES[id];
 }
 
+export interface FixGuide {
+  id: RemediationId;
+  title: string;
+  summary: string;
+  effort: 'minutes' | 'hour' | 'day';
+  steps: readonly string[];
+}
+
+/** Structured fix guidance for an exposure, in the order it should be done. */
+export function fixGuides(id: ExposureId): FixGuide[] {
+  return EXPOSURES[id].remediatedBy.map((r) => ({ id: r, title: REMEDIATIONS[r].label, summary: REMEDIATIONS[r].summary, effort: REMEDIATIONS[r].effort, steps: GUIDES[r] }));
+}
+
 /**
- * Default report text for a finding, derived entirely from the ontology. The report
- * phase layers detailed, step-by-step guides on top, keyed by the same exposure id.
+ * Report text for a finding, derived entirely from the ontology: the explanation and the
+ * fix steps (as markdown, stored with the finding as a snapshot).
  */
 export function describeExposure(id: ExposureId): { explanation: string; fixSteps: string } {
-  const exposure = EXPOSURES[id];
-  const steps = exposure.remediatedBy.map((r) => `- **${REMEDIATIONS[r].label}.** ${REMEDIATIONS[r].summary}`);
-  return {
-    explanation: exposure.description,
-    fixSteps: steps.length > 0 ? steps.join('\n') : 'No action needed.',
-  };
+  const guides = fixGuides(id);
+  const fixSteps = guides
+    .map((g) => [`**${g.title}.** ${g.summary}`, ...g.steps.map((s, i) => `${i + 1}. ${s}`)].join('\n'))
+    .join('\n\n');
+  return { explanation: EXPOSURES[id].description, fixSteps: fixSteps || 'No action needed.' };
 }
 
 /** Standard references for an exposure (CWE and CAPEC pages). */
@@ -75,7 +89,9 @@ export function toJsonLd(): Record<string, unknown> {
   for (const [id, label] of Object.entries(ATTACK_PATTERNS)) graph.push({ '@id': ref(id), '@type': 'AttackPattern', label, seeAlso: capecUrl(id as AttackPatternId) });
   for (const [id, c] of Object.entries(COMPONENTS)) graph.push({ '@id': ref(id), '@type': 'Component', label: c.label, definition: c.description });
   for (const [id, c] of Object.entries(CONTROLS)) graph.push({ '@id': ref(id), '@type': 'Control', label: c.label, definition: c.description });
-  for (const [id, r] of Object.entries(REMEDIATIONS)) graph.push({ '@id': ref(id), '@type': 'Remediation', label: r.label, definition: r.summary, effort: r.effort });
+  for (const [id, r] of Object.entries(REMEDIATIONS)) {
+    graph.push({ '@id': ref(id), '@type': 'Remediation', label: r.label, definition: r.summary, effort: r.effort, steps: [...GUIDES[id as RemediationId]] });
+  }
   for (const [id, e] of Object.entries(EXPOSURES) as Array<[string, ExposureDef]>) {
     graph.push({
       '@id': ref(id),

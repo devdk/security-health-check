@@ -70,6 +70,12 @@ describe('loadConfig', () => {
     ).toThrow(/SCAN_ALLOW_PRIVATE_HOSTS/);
   });
 
+  it('never allows the instant-upgrade payment stub in production', () => {
+    expect(loadConfig(base).payments.provider).toBe('stub');
+    expect(loadConfig({ ...base, NODE_ENV: 'production', WEB_BASE_URL: 'https://app.example.com' }).payments.provider).toBe('none');
+    expect(() => loadConfig({ ...base, NODE_ENV: 'production', WEB_BASE_URL: 'https://app.example.com', PAYMENTS_PROVIDER: 'stub' })).toThrow(/not allowed in production/);
+  });
+
   it('returns a frozen object', () => {
     expect(Object.isFrozen(loadConfig(base))).toBe(true);
   });
