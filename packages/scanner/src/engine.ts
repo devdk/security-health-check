@@ -72,7 +72,8 @@ async function resolveBaseUrl(http: PoliteClient, domain: string): Promise<strin
   throw new ScanError('unreachable', `We couldn't reach ${domain} over HTTPS or HTTP (${reason}).`);
 }
 
-function sanitise(f: Finding, moduleId: string): Finding | null {
+/** Drops findings that point outside the ontology or claim another module's id, and trims what came from the site. */
+export function sanitiseFinding(f: Finding, moduleId: string): Finding | null {
   if (!isExposureId(f.conceptId) || !(SEVERITIES as readonly string[]).includes(f.severity)) return null;
   if (!f.checkId.startsWith(`${moduleId}.`)) return null;
   return {
@@ -128,7 +129,7 @@ export async function runScan(options: RunScanOptions): Promise<ScanOutcome> {
           log.warn({ module: m.id, err: String(err) }, 'check module failed');
         }
       }
-      const valid = produced.map((f) => sanitise(f, m.id)).filter((f): f is Finding => f !== null);
+      const valid = produced.map((f) => sanitiseFinding(f, m.id)).filter((f): f is Finding => f !== null);
       if (valid.length !== produced.length) log.warn({ module: m.id, dropped: produced.length - valid.length }, 'dropped malformed findings');
       findings.push(...valid);
       outcomes.push({ module: m.id, status, durationMs: Date.now() - started, requests: http.requestsBy(m.id), findings: valid.length, note });

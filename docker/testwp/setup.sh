@@ -51,4 +51,29 @@ EOF
 printf '[08-Nov-2026 10:00:00 UTC] PHP Warning:  Undefined variable $example in /var/www/html/wp-content/themes/example.php on line 3\n' > /var/www/html/wp-content/debug.log
 mkdir -p /var/www/html/wp-content/uploads/2026/11
 
+# Companion plugin (mounted read-only from ./plugin/shc-companion) and the inside findings it should report.
+wp plugin activate shc-companion
+
+mkdir -p /var/www/html/wp-content/uploads/2026/11 /var/www/html/wp-content/mu-plugins
+cat > /var/www/html/wp-content/uploads/2026/11/cache-helper.php <<'EOF'
+<?php
+// Harmless test fixture: a PHP file in uploads. Does nothing.
+EOF
+cat > /var/www/html/wp-content/uploads/index.php <<'EOF'
+<?php
+// Silence is golden.
+EOF
+cat > /var/www/html/wp-content/mu-plugins/shc-test-fixture.php <<'EOF'
+<?php
+// Harmless test fixture: a PHP change outside any plugin or theme. Does nothing.
+EOF
+grep -q 'SHC test fixture' /var/www/html/wp-includes/template-loader.php ||
+  echo '// SHC test fixture: harmless comment, makes this core file differ from its checksum.' >> /var/www/html/wp-includes/template-loader.php
+
+# More than three administrators, with random passwords nobody needs.
+for n in 1 2 3; do
+  wp user get "shc-ops-$n" >/dev/null 2>&1 ||
+    wp user create "shc-ops-$n" "shc-ops-$n@wordpress.test" --role=administrator >/dev/null
+done
+
 echo "Test WordPress ready: WordPress $(wp core version), Contact Form 7 $(wp plugin get contact-form-7 --field=version)"

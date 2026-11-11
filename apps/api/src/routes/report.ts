@@ -47,6 +47,7 @@ const RevealedFinding = Type.Object(
     indicatesCompromise: Type.Boolean(),
     attribution: Nullable(Type.Object({ source: Type.String(), recordUrl: Nullable(Type.String()), notices: Type.Array(Type.String()) })),
     fixRequest: Nullable(Type.Object({ status: Type.String(), createdAt: Type.String() })),
+    source: Type.Union([Type.Literal('outside'), Type.Literal('inside')]),
   },
   { additionalProperties: false },
 );
@@ -61,6 +62,9 @@ const Report = Type.Object({
   finishedAt: Nullable(Type.String()),
   baseUrl: Nullable(Type.String()),
   requestCount: Type.Integer(),
+  kind: Type.Union([Type.Literal('external'), Type.Literal('inside')]),
+  outside: Nullable(Type.Object({ scanId: Type.String(), finishedAt: Type.String(), baseUrl: Nullable(Type.String()), requestCount: Type.Integer() }, { additionalProperties: false })),
+  inside: Nullable(Type.Object({ scanId: Type.String(), finishedAt: Type.String(), pluginVersion: Nullable(Type.String()) }, { additionalProperties: false })),
   plan: Type.Union([Type.Literal('free'), Type.Literal('pro')]),
   score: Type.Integer({ minimum: 0, maximum: 100 }),
   grade: Type.String(),
@@ -68,7 +72,7 @@ const Report = Type.Object({
   compromiseSuspected: Type.Boolean(),
   lockedCount: Type.Integer(),
   findings: Type.Array(Type.Union([LockedFinding, RevealedFinding])),
-  components: Type.Array(Type.Intersect([Component, Type.Object({ versionConfidence: Nullable(Confidence) })])),
+  components: Type.Array(Type.Intersect([Component, Type.Object({ versionConfidence: Nullable(Confidence), active: Nullable(Type.Boolean()) })])),
   dataSources: Type.Array(
     Type.Object({
       id: Type.String(),

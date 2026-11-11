@@ -144,6 +144,19 @@ describe('reading scans', () => {
     ]);
   });
 
+  it('says which kind of scan each one is', async () => {
+    await ctx.db.update(sites).set({ verifiedAt: new Date(), verificationMethod: 'dns_txt' }).where(eq(sites.id, siteId));
+    await post(ctx, '/api/billing/upgrade', { plan: 'pro' }, alice);
+    const external = (await startScan()).json().scan;
+    expect(external.kind).toBe('external');
+    const [inside] = await ctx.db.insert(scans).values({ siteId, kind: 'inside', trigger: 'plugin', status: 'queued' }).returning();
+    const listed = (await get(ctx, `/api/sites/${siteId}/scans`, alice)).json().scans;
+    expect(listed.map((s: { id: string; kind: string; trigger: string }) => [s.id, s.kind, s.trigger])).toEqual([
+      [inside!.id, 'inside', 'plugin'],
+      [external.id, 'external', 'manual'],
+    ]);
+  });
+
   it('shows scan details with detected software, without exposing finding details yet', async () => {
     const scanId = await completedScan();
     const res = await get(ctx, `/api/scans/${scanId}`, alice);

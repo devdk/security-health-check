@@ -21,7 +21,8 @@
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:plugin": "node scripts/test-plugin.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

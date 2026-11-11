@@ -1,11 +1,13 @@
 import type { FastifyError, FastifyInstance } from 'fastify';
 import { HttpError } from '../lib/errors';
 
+const CLIENT_ERROR_CODES: Partial<Record<number, string>> = { 413: 'payload_too_large', 415: 'unsupported_media_type', 429: 'rate_limited' };
+
 /** Consistent JSON errors; internal details and stack traces never reach the client. */
 export function registerErrorHandling(app: FastifyInstance): void {
   app.setErrorHandler((error: FastifyError | HttpError, request, reply) => {
     if (error instanceof HttpError) {
-      return reply.code(error.statusCode).send({ error: error.code, message: error.message });
+      return reply.code(error.statusCode).send({ error: error.code, message: error.message, ...(error.details === undefined ? {} : { details: error.details }) });
     }
     if ('validation' in error && error.validation) {
       return reply.code(400).send({
@@ -16,7 +18,7 @@ export function registerErrorHandling(app: FastifyInstance): void {
     }
     const status = error.statusCode ?? 500;
     if (status < 500) {
-      const code = status === 429 ? 'rate_limited' : status === 415 ? 'unsupported_media_type' : 'bad_request';
+      const code = CLIENT_ERROR_CODES[status] ?? 'bad_request';
       return reply.code(status).send({ error: code, message: status === 429 ? 'Too many requests, slow down' : error.message });
     }
     request.log.error({ err: error }, 'unhandled error');

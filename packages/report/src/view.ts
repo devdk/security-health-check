@@ -10,7 +10,8 @@ import {
   WEAKNESSES,
   type ExposureDef,
 } from '@shc/ontology';
-import { SEVERITIES, type Confidence, type Plan, type Severity, type SoftwareType } from '@shc/shared';
+import { SEVERITIES, type Confidence, type Plan, type ScanKind, type Severity, type SoftwareType } from '@shc/shared';
+import { mergeParts, type FindingSource, type ScanPart, type SourcedFinding, type StoredComponent } from './merge';
 import { computeScore, gradeFor, type Grade } from './score';
 
 export interface Reference {
@@ -44,22 +45,18 @@ export interface StoredFinding {
   attribution: StoredAttribution | null;
 }
 
-export interface ReportInput {
-  scan: {
-    id: string;
+/** The scan the report was opened for, with its counterpart (see findCounterpart in @shc/core). */
+export interface ReportInput extends ScanPart {
+  scan: ScanPart['scan'] & {
     siteId: string;
     status: string;
     createdAt: Date;
     startedAt: Date | null;
-    finishedAt: Date | null;
-    requestCount: number;
-    baseUrl: string | null;
     score: number | null;
     grade: string | null;
   };
   domain: string;
-  findings: StoredFinding[];
-  components: Array<{ type: SoftwareType; slug: string; name: string | null; version: string | null; versionConfidence: Confidence | null }>;
+  counterpart: ScanPart | null;
   fixRequests?: Map<string, { status: string; createdAt: Date }>;
 }
 
@@ -94,6 +91,7 @@ export interface RevealedFinding {
   indicatesCompromise: boolean;
   attribution: { source: string; recordUrl: string | null; notices: string[] } | null;
   fixRequest: { status: string; createdAt: string } | null;
+  source: FindingSource;
 }
 
 /** All a free user learns about a locked finding. Nothing from the scan beyond severity and area. */
@@ -115,6 +113,7 @@ export interface DataSource {
 }
 
 export interface ReportView {
+  /** These fields, down to requestCount, describe the scan the report was opened for. */
   scanId: string;
   siteId: string;
   domain: string;
@@ -124,6 +123,9 @@ export interface ReportView {
   finishedAt: string | null;
   baseUrl: string | null;
   requestCount: number;
+  kind: ScanKind;
+  outside: { scanId: string; finishedAt: string; baseUrl: string | null; requestCount: number } | null;
+  inside: { scanId: string; finishedAt: string; pluginVersion: string | null } | null;
   plan: Plan;
   score: number;
   grade: Grade;
@@ -131,7 +133,7 @@ export interface ReportView {
   compromiseSuspected: boolean;
   lockedCount: number;
   findings: ReportFinding[];
-  components: ReportInput['components'];
+  components: StoredComponent[];
   dataSources: DataSource[];
   features: { pdf: boolean; history: boolean; fixRequests: boolean; weeklyScans: boolean };
 }
@@ -178,7 +180,7 @@ function fixNoteOf(f: StoredFinding): string | null {
   return latest && /outdated/.test(f.conceptId) ? `The latest version is ${latest}.` : null;
 }
 
-function reveal(f: StoredFinding, fixVisible: boolean, fixRequest: { status: string; createdAt: Date } | undefined): RevealedFinding {
+function reveal(f: SourcedFinding, fixVisible: boolean, fixRequest: { status: string; createdAt: Date } | undefined): RevealedFinding {
   const holders = f.attribution?.copyrights?.holders ?? {};
   return {
     id: f.id,
@@ -201,6 +203,7 @@ function reveal(f: StoredFinding, fixVisible: boolean, fixRequest: { status: str
       ? { source: f.attribution.source, recordUrl: f.attribution.recordUrl, notices: Object.values(holders).map((h) => h.notice) }
       : null,
     fixRequest: fixRequest ? { status: fixRequest.status, createdAt: fixRequest.createdAt.toISOString() } : null,
+    source: f.source,
   };
 }
 
@@ -241,9 +244,12 @@ function dataSourcesOf(revealed: RevealedFinding[], stored: Map<string, StoredFi
  * scan finished (about a third, mixed severities); possible-compromise findings always
  * show their title, explanation and evidence, but not the fix; everything else is locked.
  * Pro: everything, including fix guides.
+ *
+ * Findings, counts and the computed score cover the scan merged with its counterpart.
  */
 export function buildReportView(input: ReportInput, plan: Plan): ReportView {
-  const ordered = [...input.findings].sort((a, b) => a.sortOrder - b.sortOrder);
+  const merged = mergeParts(input, input.counterpart);
+  const ordered = merged.findings;
   const stored = new Map(ordered.map((f) => [f.id, f]));
   const pro = plan === 'pro';
 
@@ -269,17 +275,30 @@ export function buildReportView(input: ReportInput, plan: Plan): ReportView {
     status: input.scan.status,
     createdAt: input.scan.createdAt.toISOString(),
     startedAt: input.scan.startedAt?.toISOString() ?? null,
-    finishedAt: input.scan.finishedAt?.toISOString() ?? null,
+    finishedAt: input.scan.finishedAt.toISOString(),
     baseUrl: input.scan.baseUrl,
     requestCount: input.scan.requestCount,
+    kind: input.scan.kind,
+    outside: merged.outside && {
+      scanId: merged.outside.scan.id,
+      finishedAt: merged.outside.scan.finishedAt.toISOString(),
+      baseUrl: merged.outside.scan.baseUrl,
+      requestCount: merged.outside.scan.requestCount,
+    },
+    inside: merged.inside && {
+      scanId: merged.inside.scan.id,
+      finishedAt: merged.inside.scan.finishedAt.toISOString(),
+      pluginVersion: merged.inside.scan.pluginVersion,
+    },
     plan,
     score,
     grade: (input.scan.grade as Grade | null) ?? gradeFor(score),
     counts,
-    compromiseSuspected: ordered.some((f) => f.indicatesCompromise),
+    // A heuristic ("possible") sign is listed as a finding but doesn't raise the alarm on its own.
+    compromiseSuspected: ordered.some((f) => f.indicatesCompromise && f.confidence !== 'possible'),
     lockedCount: findings.filter((f) => f.locked).length,
     findings,
-    components: input.components,
+    components: merged.components,
     dataSources: dataSourcesOf(revealed, stored),
     features: { pdf: pro, history: pro, fixRequests: pro, weeklyScans: pro },
   };

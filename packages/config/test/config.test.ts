@@ -28,6 +28,12 @@ describe('loadConfig', () => {
     }
   });
 
+  it('switches companion-plugin pairing off without a key secret, and refuses a short one', () => {
+    expect(loadConfig(base).plugin).toEqual({ keySecret: null, pairingCodeMinutes: 15, keyTtlDays: 365, reportsPerHour: 12 });
+    expect(loadConfig({ ...base, PLUGIN_KEY_SECRET: 'x'.repeat(32) }).plugin.keySecret).toBe('x'.repeat(32));
+    expect(() => loadConfig({ ...base, PLUGIN_KEY_SECRET: 'too-short' })).toThrow(/PLUGIN_KEY_SECRET/);
+  });
+
   it('rejects malformed values', () => {
     expect(() => loadConfig({ ...base, API_PORT: 'eighty' })).toThrow(/API_PORT/);
     expect(() => loadConfig({ ...base, DATABASE_URL: 'mysql://x' })).toThrow(/DATABASE_URL/);

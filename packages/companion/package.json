@@ -1,0 +1,17 @@
+{
+  "name": "@shc/companion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@shc/shared": "0.1.0",
+    "typebox": "^1.4.4"
+  }
+}

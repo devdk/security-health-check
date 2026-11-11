@@ -10,6 +10,7 @@ export default defineConfig({
       'packages/scanner',
       'packages/intel',
       'packages/report',
+      'packages/companion',
       'apps/api',
       'apps/worker',
     ],

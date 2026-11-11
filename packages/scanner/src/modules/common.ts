@@ -23,8 +23,4 @@ export function headerList(res: PoliteResponse, name: string): string[] {
 
 export const text = (res: PoliteResponse) => res.body.toString('utf8');
 
-/** Show enough of a username to recognise it without storing it whole. */
-export function mask(value: string): string {
-  if (value.length <= 2) return '*'.repeat(value.length);
-  return `${value[0]}${'*'.repeat(Math.min(value.length - 2, 6))}${value[value.length - 1]}`;
-}
+export { mask } from '@shc/shared';

@@ -1,5 +1,5 @@
 import { SEVERITIES, type Confidence, type Severity } from '@shc/shared';
-import type { CheckModule, ComponentFact, Finding, Reference, VulnRecord } from '../types';
+import type { AnalysisModule, ComponentFact, Finding, Reference, VulnRecord } from '../types';
 import { inRange } from '../version';
 
 export function severityFromCvss(score: number | null | undefined): Severity | null {
@@ -45,7 +45,7 @@ const GROUPED_TYPES = new Set(['php']);
  * Matches every versioned component found so far against the local vulnerability cache.
  * Makes no HTTP requests. The same CVE reported by several sources becomes one finding.
  */
-export const vulnMatch: CheckModule = {
+export const vulnMatch: AnalysisModule = {
   id: 'vuln-match',
   title: 'Known vulnerabilities',
   stage: 2,

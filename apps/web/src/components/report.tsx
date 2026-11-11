@@ -133,6 +133,7 @@ export function FindingCard({ finding, canRequestFix, onChanged }: { finding: Re
         <span className={`sev sev-${finding.severity}`}>{SEVERITY_LABEL[finding.severity]}</span>
         <span className="finding-title">{finding.title}</span>
         <span className="muted small finding-cat">{finding.category}</span>
+        <span className={`source-tag source-tag-${finding.source}`}>{finding.source === 'inside' ? 'Inside view' : 'Outside scan'}</span>
       </button>
       {open && (
         <div className="finding-body">

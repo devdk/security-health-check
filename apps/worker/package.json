@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@shc/companion": "0.1.0",
     "@shc/config": "0.1.0",
     "@shc/core": "0.1.0",
     "@shc/db": "0.1.0",

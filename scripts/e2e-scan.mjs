@@ -8,7 +8,8 @@
  * Signs up a throwaway user through the real API (via nginx), adds wordpress.test,
  * proves ownership with the file method, runs a scan, prints the result, and then
  * checks the test site's own access log to confirm the scanner kept to <= 2 requests
- * per second and always identified itself.
+ * per second and always identified itself. Finally it pairs the companion plugin with
+ * WP-CLI and checks the merged inside-plus-outside report.
  */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -27,6 +28,16 @@ let failures = 0;
 const compose = (...args) => execFileSync('docker', ['compose', '--profile', 'testwp', ...args], { cwd: root, encoding: 'utf8' });
 const psql = (statement) => compose('exec', '-T', 'postgres', 'psql', '-U', 'shc', '-d', 'shc', '-v', 'ON_ERROR_STOP=1', '-tAc', statement).trim();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// WP-CLI inside the test site's setup image, which mounts the companion plugin.
+const wp = (...args) => compose('run', '--rm', '--no-deps', '-T', '--entrypoint', 'wp', 'testwp-setup', ...args);
+const wpFails = (...args) => {
+  try {
+    wp(...args);
+    return false;
+  } catch {
+    return true;
+  }
+};
 
 function step(name, ok, detail = '') {
   if (!ok) failures++;
@@ -167,6 +178,67 @@ try {
     ours.length > 0 && ours.length === requests.length && ours.length <= scan.requestCount,
     `${ours.length} of ${requests.length} logged requests carried the SecurityHealthCheck User-Agent`,
   );
+
+  // 6. Companion plugin: pair through the dashboard API and WP-CLI, then check the merged report.
+  console.log('');
+  const unsigned = await fetch(`${BASE}/api/plugin/reports`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+  step('unsigned plugin reports are refused', unsigned.status === 401, String(unsigned.status));
+
+  const pairingRes = await call('POST', `/api/sites/${site.id}/plugin/pairing-code`, {});
+  const pairing = pairingRes.body?.pairing;
+  const pairingHint =
+    pairingRes.body?.error === 'plugin_unavailable' ? 'PLUGIN_KEY_SECRET is not set: run npm run setup:env, then docker compose up -d api' : pairingRes.body?.message;
+  if (!step('pairing code issued', /^[0-9A-Z]{5}-[0-9A-Z]{5}$/.test(pairing?.code ?? ''), pairing?.expiresAt ?? pairingHint)) process.exit(1);
+  const pairedAt = new Date().toISOString();
+  const pairOut = wp('shc', 'pair', pairing.code, '--service=http://web:8080');
+  step('plugin paired from WP-CLI', /success/i.test(pairOut), pairOut.trim().split('\n').at(-1));
+  const reuse = wpFails('shc', 'pair', pairing.code, '--service=http://web:8080');
+  step('a pairing code works only once', reuse, 'second use refused');
+
+  let status;
+  for (let i = 0; i < 30; i++) {
+    status = (await call('GET', `/api/sites/${site.id}/plugin`)).body?.plugin;
+    if (status?.lastScanId && status.lastReportAt >= pairedAt) break;
+    await sleep(1000);
+  }
+  step('dashboard shows the plugin connected', status?.status === 'connected' && Boolean(status.lastScanId), `plugin ${status?.pluginVersion}`);
+
+  let inside;
+  for (let i = 0; i < 60; i++) {
+    inside = (await call('GET', `/api/scans/${status.lastScanId}`)).body.scan;
+    if (inside.status === 'completed' || inside.status === 'failed') break;
+    await sleep(1000);
+  }
+  step('inside report processed', inside?.status === 'completed' && inside.kind === 'inside', inside?.error ?? inside?.status);
+  step('inside report sent no requests to the site', inside?.requestCount === 0, String(inside?.requestCount));
+
+  const merged = (await call('GET', `/api/scans/${inside.id}/report`)).body.report;
+  console.log(`\n  merged report: ${merged.score}/100 grade ${merged.grade}; ${merged.findings.length} findings`);
+  step('report combines the outside scan and the inside report', merged.outside?.scanId === scan.id && merged.inside?.scanId === inside.id);
+  const insideConcepts = new Set(merged.findings.filter((f) => f.source === 'inside').map((f) => f.conceptId));
+  for (const expected of [
+    'exposure/php-in-uploads',
+    'exposure/core-files-modified',
+    'exposure/suspicious-file-changes',
+    'exposure/excessive-administrators',
+    'exposure/no-two-factor-auth',
+    'exposure/inactive-component-installed',
+    'exposure/known-vulnerable-component',
+    'exposure/plugin-outdated',
+  ]) {
+    step(`inside view found ${expected.replace('exposure/', '')}`, insideConcepts.has(expected));
+  }
+  const cf7Vulns = merged.findings.filter((f) => f.conceptId === 'exposure/known-vulnerable-component' && f.component?.slug === 'contact-form-7');
+  step('inside versions replace outside guesses (no duplicate CF7 finding)', cf7Vulns.length === 1 && cf7Vulns[0].source === 'inside', cf7Vulns.map((f) => f.source).join(','));
+  step('outside-only findings are kept', merged.findings.some((f) => f.source === 'outside' && f.conceptId === 'exposure/xmlrpc-enabled'));
+  step('merged score is stored on the inside scan', inside.score === merged.score, `${inside.score} vs ${merged.score}`);
+  step('silent index.php in uploads is not reported', !JSON.stringify(merged.findings).includes('uploads/index.php') && !JSON.stringify(merged.findings).includes('"index.php"'));
+
+  const stored = psql(`select payload::text from plugin_reports where scan_id = '${inside.id}'`);
+  step('stored report never holds full admin logins', !/shc-admin|shc-ops-/.test(stored) && /\*/.test(stored));
+
+  await call('DELETE', `/api/sites/${site.id}/plugin`);
+  step('after disconnecting, the plugin is refused', wpFails('shc', 'send'), 'send refused');
 } finally {
   psql(`delete from vuln_cache where source_id = '${SAMPLE_ID}'`);
 }

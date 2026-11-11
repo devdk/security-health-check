@@ -2,12 +2,12 @@
 
 An attacker's-eye security audit for WordPress sites. Owners add a site, prove they own it, and get a scored security report. A companion WordPress plugin adds an inside-view audit.
 
-> **Status: Phase 5.** Done: scaffold, auth, site management, ownership verification, the security ontology, the scan queue and worker, all external checks, the daily vulnerability intelligence, scoring, reports with free/paid visibility, PDF export, plans (stub payments), weekly scans and fix requests. The companion plugin comes next. A full README follows in the hardening phase.
+> **Status: Phase 6.** Done: scaffold, auth, site management, ownership verification, the security ontology, the scan queue and worker, all external checks, the daily vulnerability intelligence, scoring, reports with free/paid visibility, PDF export, plans (stub payments), weekly scans, fix requests, and the companion plugin with signed inside reports merged into one report. Next: context engineering and the AI harness. A full README follows in the hardening phase.
 
 ## Reports, scores and plans
 
 **Score and grade** (`packages/report/src/score.ts`): every finding takes points off 100 according to its severity: critical 30, high 15, medium 6, low 2, info 0. The deduction is scaled by confidence (confirmed ×1, likely ×0.8, possible ×0.5), and repeats of the same problem count less each time. Caps keep the grade honest:
-- a possible compromise caps the score at 19 (F);
+- a likely or confirmed sign of compromise caps the score at 19 (F); a merely possible one (a heuristic) is shown as a warning but doesn't cap;
 - a confirmed or likely critical caps it at 49 (F);
 - a confirmed or likely high caps it at 74 (C).
 
@@ -23,8 +23,9 @@ Grades are A 90+, B 80+, C 70+, D 60+, otherwise F. The score is stored on the s
 | Possible-compromise findings | title, explanation and evidence always shown; fix locked | full |
 | Step-by-step fix guides | for the findings shown | ✓ |
 | PDF export, scan history, weekly scans, "request a fix" | – | ✓ |
+| Inside view (companion plugin) | – | ✓ |
 
-Locked findings are built field by field and the response schema forbids extra fields, so nothing else can leak. Tests check the raw response bodies.
+Locked findings are built field by field and the response schema forbids extra fields, so nothing else can leak. Tests check the raw response bodies. Inside findings are never part of the free selection.
 
 **Payments**: the `PaymentProvider` interface (`packages/core/src/billing.ts`) has a **stub** for development, which switches plans instantly from the Account page, and **none**. The stub is refused in production by config; a real provider (Stripe, Paddle…) plugs in behind the same interface.
 
@@ -33,6 +34,18 @@ Locked findings are built field by field and the response schema forbids extra f
 **Attribution**: findings from Wordfence keep the record link and the Defiant and MITRE notices. Findings from NVD carry the NVD notice. The report and the PDF show them in a "Data sources" section.
 
 **Weekly scans**: Pro sites can opt in. A scheduler checks every 10 minutes, and each scheduled scan follows the same rules as a manual one (re-verified ownership, one scan at a time, cooldown). Weekly scans switch off when the owner leaves Pro.
+
+## Companion plugin (inside view)
+
+A read-only WordPress plugin (`plugin/shc-companion`, PHP 7.4+, WordPress 5.8+, no dependencies) reports what a scan from outside can't see. The full design and wire protocol are in [docs/companion-plugin.md](docs/companion-plugin.md).
+
+- **What it sends**: every plugin and theme with its version and whether it is active; WordPress and PHP versions; administrator accounts with logins masked on the site (`s******n`); debug settings; the permission bits of `wp-config.php`; core files that differ from WordPress.org's checksums; PHP files in the uploads folder; PHP files changed in the last 7 days that no update explains. Never file contents, passwords or keys. **Tools → Security Health Check → See exactly what is sent** shows the JSON.
+- **Pairing**: on the site page (Pro, verified site) choose **Connect the plugin**. The dashboard shows the service address and a one-time code (15 minutes). The site admin enters both in the plugin, or runs `wp shc pair <code> --service=<address>`. The API returns a site key derived from `PLUGIN_KEY_SECRET` and stores only its hash. Keys expire after a year; **Disconnect** on the dashboard revokes them.
+- **Signed reports**: sent right after pairing, then daily by WP-Cron, or with **Send report now** / `wp shc send`. Each carries an HMAC-SHA256 signature, a timestamp (±5 minutes) and a single-use nonce. The API checks all three and a strict schema before storing anything.
+- **Merged report**: each report becomes an inside scan, analysed by the worker without contacting the site. A report pairs a scan with the newest scan of the other kind from the previous 30 days. Where both views see the same software, the inside view wins, because it knows the installed versions exactly. Findings carry an "Inside view" or "Outside scan" tag, and the score covers both.
+- **Install**: the dashboard serves the plugin as `/downloads/shc-companion.zip` (built into the web image). Upload it in WordPress under Plugins → Add New → Upload Plugin.
+- **Settings**: `PLUGIN_KEY_SECRET` (API only; generated by `npm run setup:env`; empty switches pairing off; changing it disconnects every plugin). In the plugin, `SHC_COMPANION_SERVICE` in `wp-config.php` pre-fills and locks the service address, and plain http is refused unless `SHC_COMPANION_ALLOW_HTTP` is true (development only).
+- **Note**: `wp shc send` reports the PHP version of the command line, which some hosts run differently from the web server. The daily report runs inside WordPress and reports the web server's PHP.
 
 ## Vulnerability intelligence
 
@@ -87,14 +100,14 @@ dashboard ──POST /api/sites/:id/scans──▶ API ──(re-verify ownershi
 
 ## Local test WordPress (end-to-end)
 
-A deliberately outdated WordPress (6.4.2 on PHP 8.1, with Contact Form 7 5.3.1 (CVE-2020-35489), a leftover `wp-config.php.bak` holding fake values, and a public `debug.log`) runs under a separate compose profile. Its updates are disabled, it is published on 127.0.0.1 only, and the scanner reaches it as `http://wordpress.test`.
+A deliberately outdated WordPress (6.4.2 on PHP 8.1, with Contact Form 7 5.3.1 (CVE-2020-35489), a leftover `wp-config.php.bak` holding fake values, and a public `debug.log`) runs under a separate compose profile. Its updates are disabled, it is published on 127.0.0.1 only, and the scanner reaches it as `http://wordpress.test`. The companion plugin is mounted read-only and activated, and the setup plants problems only the inside view can see: a PHP file in uploads, a changed core file, a stray must-use plugin and three extra administrators. All contents are harmless.
 
 ```bash
 docker compose --profile testwp up -d
 node scripts/e2e-scan.mjs
 ```
 
-The end-to-end script signs up through the real API, verifies ownership with the file method, runs a scan, and then reads the test site's access log to confirm the scanner never exceeded 2 requests per second and always sent its User-Agent.
+The end-to-end script signs up through the real API, verifies ownership with the file method, runs a scan, and then reads the test site's access log to confirm the scanner never exceeded 2 requests per second and always sent its User-Agent. It then upgrades to Pro, pairs the plugin with WP-CLI, and checks the merged report, single-use codes, masked logins and that a disconnected plugin is refused.
 
 To re-record the HTTP fixtures that module tests replay:
 
@@ -173,13 +186,16 @@ npm test
 | `npm run db:migrate` | Applies migrations to `DATABASE_URL` |
 | `npm run typecheck` | Type-checks every workspace |
 | `npm run build` | Bundles api/worker (esbuild) and builds the web app (Vite) |
+| `npm run test:plugin` | Lints the companion plugin's PHP and runs its tests (in the WP-CLI image; needs Docker) |
 
 ## Layout
 
 ```
-apps/api        Fastify API (auth now; sites, scans, reports, plugin ingestion later)
-apps/worker     BullMQ worker (skeleton now; scan jobs in Phase 3)
+apps/api        Fastify API: auth, sites, scans, reports, PDF, billing, plugin pairing and signed ingestion
+apps/worker     BullMQ worker: outside and inside scans, daily intel refresh, weekly scans
 apps/web        React + Vite dashboard
+packages/companion Plugin protocol: pairing codes, site keys, request signing, inside-report schema, test vectors
+plugin/         The companion WordPress plugin (PHP) and its tests
 packages/config Env loading and validation: the only code that reads process.env
 packages/core   Business rules shared by API and worker (audit log, re-verify before scan, scan requests, queue)
 packages/db     Drizzle schema, generated SQL migrations, DB client

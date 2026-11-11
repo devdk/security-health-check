@@ -65,4 +65,15 @@ export function effectivePlan(plan: Plan | null | undefined, status: Subscriptio
   return plan === 'pro' && (status === 'active' || status === 'trialing') ? 'pro' : 'free';
 }
 
+/**
+ * Show enough of a username to recognise it without storing it whole: "shc-admin" becomes
+ * "s******n". Applying it twice gives the same result, so already-masked input is safe.
+ * The companion plugin implements the same rule.
+ */
+export function mask(value: string): string {
+  const chars = [...value];
+  if (chars.length <= 2) return '*'.repeat(chars.length);
+  return `${chars[0]}${'*'.repeat(Math.min(chars.length - 2, 6))}${chars[chars.length - 1]}`;
+}
+
 export * from './domain';

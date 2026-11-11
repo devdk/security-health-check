@@ -33,9 +33,10 @@ export function gradeFor(score: number): Grade {
 
 /**
  * Security score out of 100. Each finding takes points off by severity, scaled by how sure
- * we are; repeats of one problem count less. Then caps keep the grade honest: a site that
- * may be compromised is an F whatever else is true, a confirmed critical issue can never
- * score above F, and a high one never above C.
+ * we are; repeats of one problem count less. Then caps keep the grade honest: a site with
+ * likely or confirmed signs of compromise is an F whatever else is true, a confirmed
+ * critical issue can never score above F, and a high one never above C. A merely possible
+ * sign (a heuristic) is still shown as a warning, but doesn't decide the grade on its own.
  */
 export function computeScore(findings: readonly ScorableFinding[]): ScoreResult {
   const byConcept = new Map<string, ScorableFinding[]>();
@@ -55,7 +56,7 @@ export function computeScore(findings: readonly ScorableFinding[]): ScoreResult 
   let score = Math.round(Math.max(0, Math.min(100, 100 - penalties.reduce((s, p) => s + p.points, 0))));
   let cap: ScoreResult['cap'] = null;
   const sure = (f: ScorableFinding) => f.confidence !== 'possible';
-  if (findings.some((f) => f.indicatesCompromise)) {
+  if (findings.some((f) => f.indicatesCompromise && sure(f))) {
     cap = 'compromise';
     score = Math.min(score, 19);
   } else if (findings.some((f) => f.severity === 'critical' && sure(f))) {

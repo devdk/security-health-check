@@ -2,7 +2,7 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { createScanRequest, markScanFailed, planFor, type ScanQueue } from '@shc/core';
 import { findings, scans, siteComponents, sites, type Database, type ModuleResult } from '@shc/db';
 import type { OwnershipChecker } from '@shc/net';
-import { SEVERITIES, type Confidence, type ScanStatus, type ScanTrigger, type Severity, type SoftwareType } from '@shc/shared';
+import { SEVERITIES, type Confidence, type ScanKind, type ScanStatus, type ScanTrigger, type Severity, type SoftwareType } from '@shc/shared';
 import { HttpError } from '../lib/errors';
 import type { RequestContext } from './auth-service';
 
@@ -11,6 +11,7 @@ export type SeverityCounts = Record<Severity, number>;
 export interface ScanSummaryDto {
   id: string;
   siteId: string;
+  kind: ScanKind;
   status: ScanStatus;
   trigger: ScanTrigger;
   createdAt: string;
@@ -38,6 +39,7 @@ function toSummary(row: ScanRow, counts: SeverityCounts = emptyCounts()): ScanSu
   return {
     id: row.id,
     siteId: row.siteId,
+    kind: row.kind,
     status: row.status,
     trigger: row.trigger,
     createdAt: row.createdAt.toISOString(),

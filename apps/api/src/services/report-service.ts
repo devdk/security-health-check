@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray } from 'drizzle-orm';
-import { audit, planFor } from '@shc/core';
-import { findings, scans, serviceRequests, siteComponents, sites, type Database } from '@shc/db';
-import { buildReportView, renderReportHtml, type ReportView, type StoredFinding } from '@shc/report';
+import { audit, loadReportParts, planFor } from '@shc/core';
+import { findings, scans, serviceRequests, sites, type Database } from '@shc/db';
+import { buildReportView, renderReportHtml, type ReportView } from '@shc/report';
 import type { Plan } from '@shc/shared';
 import { HttpError } from '../lib/errors';
 import { PdfUnavailableError, type PdfRenderer } from '../lib/pdf';
@@ -42,29 +42,12 @@ export class ReportService {
   async report(ownerId: string, scanId: string): Promise<ReportView> {
     const { db } = this.deps;
     const { scan, domain } = await this.ownedScan(ownerId, scanId);
-    if (scan.status !== 'completed') throw new HttpError(409, 'scan_not_finished', 'The report is ready once the scan has finished.');
+    if (scan.status !== 'completed' || !scan.finishedAt) throw new HttpError(409, 'scan_not_finished', 'The report is ready once the scan has finished.');
     const plan = await planFor(db, ownerId);
     await this.assertHistoryAllowed(plan, scan.siteId, scan.id);
 
-    const rows = await db
-      .select({ f: findings, c: siteComponents })
-      .from(findings)
-      .leftJoin(siteComponents, eq(siteComponents.id, findings.componentId))
-      .where(eq(findings.scanId, scanId))
-      .orderBy(findings.sortOrder);
-    const components = await db
-      .select({
-        type: siteComponents.softwareType,
-        slug: siteComponents.slug,
-        name: siteComponents.name,
-        version: siteComponents.version,
-        versionConfidence: siteComponents.versionConfidence,
-      })
-      .from(siteComponents)
-      .where(eq(siteComponents.scanId, scanId))
-      .orderBy(siteComponents.softwareType, siteComponents.slug);
-
-    const ids = rows.map((r) => r.f.id);
+    const { part, counterpart } = await loadReportParts(db, { ...scan, finishedAt: scan.finishedAt });
+    const ids = [...part.findings, ...(counterpart?.findings ?? [])].map((f) => f.id);
     const requests =
       plan === 'pro' && ids.length > 0
         ? await db
@@ -73,30 +56,12 @@ export class ReportService {
             .where(and(eq(serviceRequests.userId, ownerId), inArray(serviceRequests.findingId, ids)))
         : [];
 
-    const stored: StoredFinding[] = rows.map(({ f, c }) => ({
-      id: f.id,
-      checkId: f.checkId,
-      conceptId: f.conceptId,
-      severity: f.severity,
-      confidence: f.confidence,
-      title: f.title,
-      evidence: f.evidence as Record<string, unknown>,
-      explanation: f.explanation,
-      fixSteps: f.fixSteps,
-      references: f.references,
-      indicatesCompromise: f.indicatesCompromise,
-      visibleInFree: f.visibleInFree,
-      sortOrder: f.sortOrder,
-      component: c ? { type: c.softwareType, slug: c.slug, name: c.name, version: c.version } : null,
-      attribution: f.attribution ?? null,
-    }));
-
     return buildReportView(
       {
-        scan,
+        ...part,
+        scan: { ...part.scan, siteId: scan.siteId, status: scan.status, createdAt: scan.createdAt, startedAt: scan.startedAt, score: scan.score, grade: scan.grade },
         domain,
-        findings: stored,
-        components,
+        counterpart,
         fixRequests: new Map(requests.filter((r) => r.findingId).map((r) => [r.findingId!, { status: r.status, createdAt: r.createdAt }])),
       },
       plan,

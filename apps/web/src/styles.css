@@ -685,6 +685,7 @@ form {
 .finding-head {
   width: 100%;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
   padding: 0.85rem 1.1rem;
@@ -699,7 +700,7 @@ form {
   cursor: default;
 }
 .finding-title {
-  flex: 1;
+  flex: 1 1 12rem;
   font-weight: 600;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -854,6 +855,86 @@ form {
   margin-top: 0.35rem;
 }
 
+/* Inside view */
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 0.75rem 0;
+}
+.facts dt {
+  font-size: 0.85rem;
+  font-weight: 550;
+  color: var(--muted);
+}
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.confirm-box {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+}
+.confirm-box p {
+  margin: 0;
+}
+/* Fixed minimum height so the code appearing doesn't push the steps down. */
+.pairing-box {
+  min-height: 15rem;
+  margin: 0.5rem 0 1.25rem;
+}
+.pairing-placeholder {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  min-height: 15rem;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.pairing-lapsed {
+  color: var(--danger-text);
+}
+.copy-field-large .code {
+  font-size: 1.5rem;
+  letter-spacing: 0.06em;
+  padding: 0.6rem 0.8rem;
+}
+.copy-field-large:first-child .code {
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+.source-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.source-tag-inside {
+  background: var(--info-bg);
+  color: var(--info-text);
+  border-color: transparent;
+}
+.report-parts {
+  margin: 0.25rem 0;
+}
+.report-parts p {
+  margin: 0.15rem 0;
+}
+
 @media (max-width: 560px) {
   .inline-form {
     flex-direction: column;
@@ -868,4 +949,13 @@ form {
   .page-header {
     flex-direction: column;
   }
+}
+
+.badge-inactive {
+  margin-left: 0.4rem;
+  color: var(--warn-text);
+  background: var(--warn-bg);
+  border-color: transparent;
+  font-size: 0.75rem;
+  padding: 0.05rem 0.5rem;
 }

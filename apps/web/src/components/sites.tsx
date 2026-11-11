@@ -11,7 +11,7 @@ export function StatusBadge({ status }: { status: SiteStatus }) {
   return <span className={`badge badge-${status}`}>{STATUS_LABEL[status]}</span>;
 }
 
-export function CopyField({ label, value }: { label: string; value: string }) {
+export function CopyField({ label, value, large = false }: { label: string; value: string; large?: boolean }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -25,7 +25,7 @@ export function CopyField({ label, value }: { label: string; value: string }) {
   }
 
   return (
-    <div className="copy-field">
+    <div className={`copy-field${large ? ' copy-field-large' : ''}`}>
       <span className="copy-label">{label}</span>
       <div className="copy-row">
         <code className="code">{value}</code>

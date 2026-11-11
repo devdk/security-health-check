@@ -1,13 +1,14 @@
-import type { CheckModule, Finding } from '../types';
+import type { AnalysisModule, Finding } from '../types';
 import { compareVersions } from '../version';
 
-const MAX_LOOKUPS = 40;
+/** Outside scans guess at most this many plugins and themes; uncached ones cost a WordPress.org lookup each. */
+export const DEFAULT_RELEASE_LOOKUPS = 40;
 
 /**
  * Compares the versions found in stage 1 with the latest releases on WordPress.org
  * (cached daily by the intel layer). Makes no requests to the scanned site.
  */
-export const outdatedSoftware: CheckModule = {
+export const outdatedSoftware: AnalysisModule = {
   id: 'outdated-software',
   title: 'Outdated software',
   stage: 2,
@@ -34,7 +35,7 @@ export const outdatedSoftware: CheckModule = {
       }
     }
 
-    const candidates = [...ctx.components.list('plugin'), ...ctx.components.list('theme')].filter((c) => c.version).slice(0, MAX_LOOKUPS);
+    const candidates = [...ctx.components.list('plugin'), ...ctx.components.list('theme')].filter((c) => c.version).slice(0, ctx.releaseLookupLimit ?? DEFAULT_RELEASE_LOOKUPS);
     for (const c of candidates) {
       const type = c.type as 'plugin' | 'theme';
       const latest = await ctx.releases.latestVersion(type, c.slug);

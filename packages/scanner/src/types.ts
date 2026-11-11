@@ -99,12 +99,18 @@ export interface ScanLogger {
   warn(obj: object, msg?: string): void;
 }
 
-export interface ScanContext {
-  http: PoliteClient;
+/** What a stage 2 module needs: the facts gathered so far and local data, no network. */
+export interface AnalysisContext {
   components: ComponentStore;
   vulns: VulnLookup;
   releases: ReleaseLookup;
   log: ScanLogger;
+  /** How many plugins and themes may be checked for newer releases; unset means the outside-scan default. */
+  releaseLookupLimit?: number;
+}
+
+export interface ScanContext extends AnalysisContext {
+  http: PoliteClient;
 }
 
 /**
@@ -116,4 +122,10 @@ export interface CheckModule {
   title: string;
   stage: 1 | 2;
   run(target: ScanTarget, context: ScanContext): Promise<Finding[]>;
+}
+
+/** A stage 2 module. It never touches the site, so it also runs over the inside view's components. */
+export interface AnalysisModule extends CheckModule {
+  stage: 2;
+  run(target: ScanTarget, context: AnalysisContext): Promise<Finding[]>;
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { api, errorMessage, type ScanSummary, type Site, type VerifyMethod } from '../api';
 import { useAuth } from '../auth';
 import { isActive, ScanStatusBadge, SeverityCounts, usePolling } from '../components/scans';
+import { InsideViewPanel } from '../components/InsideViewPanel';
 import { CopyField, formatDate, StatusBadge } from '../components/sites';
 import { Alert } from '../components/ui';
 
@@ -13,6 +14,7 @@ export function SiteDetailPage() {
   const navigate = useNavigate();
   const [site, setSite] = useState<Site | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [insideScanId, setInsideScanId] = useState<string | null>(null);
 
   useEffect(() => {
     api<{ site: Site }>(`/sites/${encodeURIComponent(siteId)}`)
@@ -73,7 +75,9 @@ export function SiteDetailPage() {
         <VerifyPanel site={site} onUpdate={setSite} />
       )}
 
-      <ScansPanel site={site} onUpdate={setSite} />
+      <InsideViewPanel site={site} onReport={setInsideScanId} />
+
+      <ScansPanel site={site} onUpdate={setSite} refreshKey={insideScanId} />
 
       <section className="card danger-zone">
         <h2>Remove site</h2>
@@ -122,7 +126,7 @@ function WeeklyScanToggle({ site, onUpdate }: { site: Site; onUpdate: (site: Sit
   );
 }
 
-function ScansPanel({ site, onUpdate }: { site: Site; onUpdate: (site: Site) => void }) {
+function ScansPanel({ site, onUpdate, refreshKey }: { site: Site; onUpdate: (site: Site) => void; refreshKey: string | null }) {
   const navigate = useNavigate();
   const [scans, setScans] = useState<ScanSummary[] | null>(null);
   const [historyLimited, setHistoryLimited] = useState(false);
@@ -136,7 +140,8 @@ function ScansPanel({ site, onUpdate }: { site: Site; onUpdate: (site: Site) => 
         setHistoryLimited(res.historyLimited);
       })
       .catch((err) => setError(errorMessage(err)));
-  }, [site.id]);
+    // refreshKey changes when a new inside report arrives; reload to show it.
+  }, [site.id, refreshKey]);
 
   useEffect(load, [load]);
   usePolling(scans?.some((s) => isActive(s.status)) ?? false, load);
@@ -172,6 +177,7 @@ function ScansPanel({ site, onUpdate }: { site: Site; onUpdate: (site: Site) => 
           {scans.map((s) => (
             <li key={s.id} className="scan-row">
               <Link to={`/scans/${s.id}`}>{formatDate(s.createdAt)}</Link>
+              <span className="muted small">{s.kind === 'inside' ? 'Inside report' : 'Outside scan'}</span>
               {s.status === 'completed' && s.grade ? (
                 <span className={`grade-chip grade-${s.grade}`} title={`Score ${s.score} / 100`}>
                   {s.grade}

@@ -6,3 +6,4 @@ export * from './components';
 export * from './engine';
 export * from './modules';
 export * from './data/php-branches';
+export * from './inside';

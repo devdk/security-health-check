@@ -31,8 +31,8 @@
       "@container": "@set"
     }
   },
-  "@id": "urn:shc:ontology/2026.11.2",
-  "version": "2026.11.2",
+  "@id": "urn:shc:ontology/2026.11.3",
+  "version": "2026.11.3",
   "@graph": [
     {
       "@id": "shc:cwe/200",
@@ -791,7 +791,8 @@
         "A06:2021"
       ],
       "detectedBy": [
-        "outdated-software"
+        "outdated-software",
+        "plugin"
       ]
     },
     {
@@ -881,7 +882,8 @@
         "A06:2021"
       ],
       "detectedBy": [
-        "vuln-match"
+        "vuln-match",
+        "plugin"
       ]
     },
     {

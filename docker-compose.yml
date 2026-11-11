@@ -93,6 +93,8 @@ services:
       PDF_SERVICE_URL: http://pdf:3000
       # Instant, free plan changes for development. Refused when APP_ENV=production.
       PAYMENTS_PROVIDER: ${PAYMENTS_PROVIDER:-stub}
+      # Only the API signs and checks companion-plugin keys.
+      PLUGIN_KEY_SECRET: ${PLUGIN_KEY_SECRET:-}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -199,8 +201,11 @@ services:
         define('AUTOMATIC_UPDATER_DISABLED', true);
         define('WP_AUTO_UPDATE_CORE', false);
         define('DISABLE_WP_CRON', true);
+        define('SHC_COMPANION_SERVICE', 'http://web:8080');
+        define('SHC_COMPANION_ALLOW_HTTP', true);
     volumes:
       - testwp-html:/var/www/html
+      - ./plugin/shc-companion:/var/www/html/wp-content/plugins/shc-companion:ro
     ports:
       - "127.0.0.1:${TESTWP_HOST_PORT:-8081}:80"
     networks:
@@ -222,6 +227,7 @@ services:
       WP_CLI_CACHE_DIR: /tmp/wp-cli-cache
     volumes:
       - testwp-html:/var/www/html
+      - ./plugin/shc-companion:/var/www/html/wp-content/plugins/shc-companion:ro
       - ./docker/testwp/setup.sh:/setup.sh:ro
     entrypoint: ["sh", "/setup.sh"]
     depends_on:

@@ -3,6 +3,8 @@ export class HttpError extends Error {
     public readonly statusCode: number,
     public readonly code: string,
     message: string,
+    /** Extra machine-readable detail sent with the error, such as validation messages. */
+    public readonly details?: unknown,
   ) {
     super(message);
     this.name = 'HttpError';

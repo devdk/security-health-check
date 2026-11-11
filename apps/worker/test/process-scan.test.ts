@@ -1,7 +1,9 @@
 import path from 'node:path';
 import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { auditEvents, createDb, findings, scans, siteComponents, sites, users, vulnCache, type DbHandle } from '@shc/db';
+import type { InsideReport } from '@shc/companion';
+import { sampleInsideReport } from '@shc/companion/testing';
+import { auditEvents, createDb, findings, pluginKeys, pluginReports, scans, siteComponents, sites, users, vulnCache, type DbHandle } from '@shc/db';
 import type { OwnershipChecker, OwnershipResult } from '@shc/net';
 import { noRateLimit, pluginsThemes, vulnMatch, wpDetect } from '@shc/scanner';
 import { FakeTlsProbe, FixtureFetcher, goodTls, loadFixture, silentLog } from '@shc/scanner/testing';
@@ -42,15 +44,20 @@ function deps(overrides: Partial<ProcessDeps> = {}): ProcessDeps {
   };
 }
 
-async function queuedScan(opts: { verifiedHoursAgo?: number | null } = {}) {
+async function ownedSite(opts: { verifiedHoursAgo?: number | null } = {}) {
   const [user] = await handle.db.insert(users).values({ email: `owner${Date.now()}${Math.random()}@example.com`, passwordHash: 'x' }).returning();
   const verifiedAt = opts.verifiedHoursAgo === null ? null : new Date(Date.now() - (opts.verifiedHoursAgo ?? 1) * 3600_000);
   const [site] = await handle.db
     .insert(sites)
     .values({ ownerId: user!.id, domain: 'example.com', verificationToken: 'a'.repeat(32), verifiedAt, verificationMethod: verifiedAt ? 'dns_txt' : null })
     .returning();
-  const [scan] = await handle.db.insert(scans).values({ siteId: site!.id, requestedBy: user!.id, kind: 'external', trigger: 'manual' }).returning();
-  return { user: user!, site: site!, scan: scan! };
+  return { user: user!, site: site! };
+}
+
+async function queuedScan(opts: { verifiedHoursAgo?: number | null } = {}) {
+  const { user, site } = await ownedSite(opts);
+  const [scan] = await handle.db.insert(scans).values({ siteId: site.id, requestedBy: user.id, kind: 'external', trigger: 'manual' }).returning();
+  return { user, site, scan: scan! };
 }
 
 beforeAll(() => {
@@ -172,6 +179,101 @@ describe('processScan', () => {
     const before = fetcher.requested.length;
     expect(await processScan(scan.id, deps())).toBe('skipped');
     expect(fetcher.requested.length).toBe(before);
+  });
+});
+
+describe('inside scans', () => {
+  const cf7Vuln = {
+    source: 'wordfence' as const,
+    sourceId: 'cf7-5.3.1',
+    softwareType: 'plugin' as const,
+    slug: 'contact-form-7',
+    title: 'Unrestricted File Upload',
+    cveIds: ['CVE-2020-35489'],
+    severity: 'critical' as const,
+    affected: [{ to: '5.3.1', toInclusive: true }],
+    fixedIn: '5.3.2',
+  };
+
+  /** A healthy site: supported PHP, a 2FA plugin, and Contact Form 7 already patched. */
+  function healthyReport(): InsideReport {
+    const report = sampleInsideReport();
+    report.php.version = '8.3.14';
+    report.plugins[0]!.version = '5.3.2';
+    report.plugins.push({ slug: 'two-factor', file: 'two-factor/two-factor.php', name: 'Two Factor', version: '0.13.0', active: true, autoUpdate: true });
+    return report;
+  }
+
+  async function queuedInsideScan(siteId: string, ownerId: string, payload: unknown) {
+    const [key] = await handle.db.insert(pluginKeys).values({ siteId, keyHash: 'h', expiresAt: new Date(Date.now() + 86_400_000) }).returning();
+    const [scan] = await handle.db.insert(scans).values({ siteId, requestedBy: ownerId, kind: 'inside', trigger: 'plugin' }).returning();
+    await handle.db.insert(pluginReports).values({ siteId, pluginKeyId: key!.id, scanId: scan!.id, signedAt: new Date(), nonce: `n-${scan!.id}`, pluginVersion: '0.1.0', payload, payloadSha256: 'x' });
+    return scan!;
+  }
+
+  it('builds findings from the stored report without contacting the site or re-checking ownership', async () => {
+    const { user, site } = await ownedSite({ verifiedHoursAgo: 30 });
+    const report = healthyReport();
+    report.php.version = '7.4.33';
+    report.plugins.push({ slug: 'hello-dolly', file: 'hello.php', name: 'Hello Dolly', version: '1.7.2', active: false, autoUpdate: false });
+    report.uploadsPhp.files = [{ path: '2026/11/cache.php', size: 99, modifiedAt: '2026-11-10T01:00:00Z' }];
+    const scan = await queuedInsideScan(site.id, user.id, report);
+
+    expect(await processScan(scan.id, deps())).toBe('completed');
+    expect(ownership.calls).toBe(0);
+    expect(fetcher.requested).toEqual([]);
+
+    const [saved] = await handle.db.select().from(scans).where(eq(scans.id, scan.id));
+    expect(saved).toMatchObject({ status: 'completed', kind: 'inside', baseUrl: 'https://example.com', requestCount: 0, grade: 'F', error: null });
+    expect(saved!.moduleResults?.map((m) => [m.module, m.status])).toEqual([
+      ['outdated-software', 'ok'],
+      ['plugin', 'ok'],
+      ['vuln-match', 'ok'],
+    ]);
+
+    const rows = await handle.db.select().from(findings).where(eq(findings.scanId, scan.id)).orderBy(findings.sortOrder);
+    expect(rows.map((f) => [f.severity, f.conceptId])).toEqual([
+      ['critical', 'exposure/php-in-uploads'],
+      ['high', 'exposure/php-unsupported'],
+      ['low', 'exposure/inactive-component-installed'],
+    ]);
+    expect(rows.every((f) => !f.visibleInFree)).toBe(true);
+    expect(rows[0]!.indicatesCompromise).toBe(true);
+
+    const components = await handle.db.select().from(siteComponents).where(eq(siteComponents.scanId, scan.id));
+    expect(components.find((c) => c.slug === 'hello-dolly')).toMatchObject({ softwareType: 'plugin', active: false, version: '1.7.2', versionConfidence: 'confirmed', sources: ['plugin'] });
+  });
+
+  it('fails a scan whose stored report does not parse', async () => {
+    const { user, site } = await ownedSite();
+    const scan = await queuedInsideScan(site.id, user.id, { schema: 99 });
+    expect(await processScan(scan.id, deps())).toBe('failed');
+    const [saved] = await handle.db.select().from(scans).where(eq(scans.id, scan.id));
+    expect(saved).toMatchObject({ status: 'failed', error: expect.stringMatching(/companion plugin/) });
+  });
+
+  it('stores the score merged with the counterpart on both kinds of scan', async () => {
+    await handle.db.insert(vulnCache).values(cf7Vuln);
+    const { user, site } = await ownedSite();
+
+    const firstInside = await queuedInsideScan(site.id, user.id, healthyReport());
+    expect(await processScan(firstInside.id, deps())).toBe('completed');
+    const [inside] = await handle.db.select().from(scans).where(eq(scans.id, firstInside.id));
+    expect(inside).toMatchObject({ score: 100, grade: 'A' });
+
+    // Alone, the outside scan's guess that CF7 5.3.1 is installed would cap it at an F.
+    // The inside view lists CF7 at 5.3.2, so only the low version disclosure counts.
+    const [external] = await handle.db.insert(scans).values({ siteId: site.id, requestedBy: user.id, kind: 'external', trigger: 'manual' }).returning();
+    expect(await processScan(external!.id, deps())).toBe('completed');
+    const [outside] = await handle.db.select().from(scans).where(eq(scans.id, external!.id));
+    expect(outside).toMatchObject({ score: 98, grade: 'A' });
+    const outsideRows = await handle.db.select().from(findings).where(eq(findings.scanId, external!.id));
+    expect(outsideRows.map((f) => f.severity)).toContain('critical');
+
+    const secondInside = await queuedInsideScan(site.id, user.id, healthyReport());
+    expect(await processScan(secondInside.id, deps())).toBe('completed');
+    const [latest] = await handle.db.select().from(scans).where(eq(scans.id, secondInside.id));
+    expect(latest).toMatchObject({ score: 98, grade: 'A' });
   });
 });
 

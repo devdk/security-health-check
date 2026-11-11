@@ -8,6 +8,7 @@ import type { ScanService } from '../services/scan-service';
 
 const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null()]);
 const ScanStatus = Type.Union([Type.Literal('queued'), Type.Literal('running'), Type.Literal('completed'), Type.Literal('failed')]);
+const ScanKind = Type.Union([Type.Literal('external'), Type.Literal('inside')]);
 const ScanTrigger = Type.Union([Type.Literal('manual'), Type.Literal('scheduled'), Type.Literal('plugin')]);
 const SoftwareType = Type.Union([Type.Literal('core'), Type.Literal('plugin'), Type.Literal('theme'), Type.Literal('php'), Type.Literal('web_server')]);
 const Confidence = Type.Union([Type.Literal('confirmed'), Type.Literal('likely'), Type.Literal('possible')]);
@@ -24,6 +25,7 @@ const Counts = Type.Object({
 export const ScanSummary = Type.Object({
   id: Type.String(),
   siteId: Type.String(),
+  kind: ScanKind,
   status: ScanStatus,
   trigger: ScanTrigger,
   createdAt: Type.String(),

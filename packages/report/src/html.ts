@@ -30,6 +30,8 @@ const link = (url: unknown, label?: string) => {
 };
 
 const SEVERITY_LABEL = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low', info: 'Info' } as const;
+const SOURCE_LABEL = { outside: 'Outside scan', inside: 'Inside view' } as const;
+const when = (iso: string) => iso.slice(0, 16).replace('T', ' ');
 const EFFORT = { minutes: 'a few minutes', hour: 'about an hour', day: 'a day or more' } as const;
 
 function evidenceRows(evidence: Record<string, unknown>): string {
@@ -70,7 +72,7 @@ function findingHtml(f: RevealedFinding, index: number): string {
       }</p>`
     : '';
   return `<section class="finding sev-${f.severity}">
-    <div class="finding-head"><span class="sev">${SEVERITY_LABEL[f.severity]}</span><span class="num">#${index + 1}</span><span class="cat">${esc(f.category)}</span><span class="conf">${esc(f.confidence)}</span></div>
+    <div class="finding-head"><span class="sev">${SEVERITY_LABEL[f.severity]}</span><span class="num">#${index + 1}</span><span class="cat">${esc(f.category)}</span><span class="conf">${esc(f.confidence)}</span><span class="src">${SOURCE_LABEL[f.source]}</span></div>
     <h3>${esc(f.title)}</h3>
     ${f.indicatesCompromise ? '<p class="compromise">This may mean the site has already been broken into.</p>' : ''}
     <p>${esc(f.explanation)}</p>
@@ -98,7 +100,7 @@ h3 { font-size: 11.5pt; margin: 1mm 0 2mm; } h4 { font-size: 10pt; margin: 3mm 0
 .finding { border: 1px solid #dde1e6; border-left-width: 2mm; border-radius: 2mm; padding: 3mm 4mm; margin: 0 0 4mm; break-inside: avoid; }
 .sev-critical { border-left-color: #8b1111; } .sev-high { border-left-color: #c2410c; } .sev-medium { border-left-color: #b45309; } .sev-low { border-left-color: #1d4f91; } .sev-info { border-left-color: #9aa4b0; }
 .finding-head { display: flex; gap: 3mm; font-size: 8.5pt; color: #5b6470; text-transform: uppercase; letter-spacing: .03em; }
-.finding-head .sev { font-weight: 700; color: #16191d; }
+.finding-head .sev { font-weight: 700; color: #16191d; } .finding-head .src { margin-left: auto; }
 .compromise { color: #9b1c1c; font-weight: 700; }
 table.evidence { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 2mm 0; }
 table.evidence th { text-align: left; color: #5b6470; font-weight: 600; width: 32mm; vertical-align: top; padding: .8mm 2mm .8mm 0; text-transform: capitalize; }
@@ -114,6 +116,10 @@ export function renderReportHtml(view: ReportView, options: { generatedAt?: Date
   const generatedAt = (options.generatedAt ?? new Date()).toISOString().slice(0, 16).replace('T', ' ');
   const revealed = view.findings.filter((f): f is RevealedFinding => !f.locked);
   const counts = (['critical', 'high', 'medium', 'low', 'info'] as const).map((s) => `<span><strong>${view.counts[s]}</strong> ${SEVERITY_LABEL[s]}</span>`).join('');
+  const parts = [
+    view.outside && `Outside scan ${esc(when(view.outside.finishedAt))} UTC · ${esc(view.outside.requestCount)} requests to ${esc(view.outside.baseUrl ?? view.domain)}`,
+    view.inside && `Inside view from the companion plugin${view.inside.pluginVersion ? ` ${esc(view.inside.pluginVersion)}` : ''}, ${esc(when(view.inside.finishedAt))} UTC`,
+  ].filter(Boolean);
 
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Security report for ${esc(view.domain)}</title><style>${CSS}</style></head>
@@ -122,7 +128,8 @@ export function renderReportHtml(view: ReportView, options: { generatedAt?: Date
     <div>
       <div class="brand">SECURITY HEALTH CHECK</div>
       <h1>${esc(view.domain)}</h1>
-      <div class="muted">Scanned ${esc((view.finishedAt ?? view.createdAt).slice(0, 16).replace('T', ' '))} UTC · ${esc(view.requestCount)} requests to ${esc(view.baseUrl ?? view.domain)} · report generated ${esc(generatedAt)} UTC</div>
+      ${parts.map((p) => `<div class="muted">${p}</div>`).join('')}
+      <div class="muted">Report generated ${esc(generatedAt)} UTC</div>
     </div>
     <div class="score"><div class="grade grade-${esc(view.grade)}">${esc(view.grade)}</div><div class="num">${esc(view.score)} / 100</div></div>
   </div>
@@ -137,13 +144,17 @@ export function renderReportHtml(view: ReportView, options: { generatedAt?: Date
   ${
     view.components.length === 0
       ? '<p class="muted">No WordPress software was identified.</p>'
-      : `<table class="software"><tr><th>Type</th><th>Name</th><th>Version</th><th>Certainty</th></tr>${view.components
-          .map((c) => `<tr><td>${esc(c.type.replace('_', ' '))}</td><td>${esc(c.name ?? c.slug)}</td><td>${esc(c.version ?? 'unknown')}</td><td>${esc(c.versionConfidence ?? '')}</td></tr>`)
+      : `<table class="software"><tr><th>Type</th><th>Name</th><th>Version</th><th>Certainty</th><th>In use</th></tr>${view.components
+          .map(
+            (c) =>
+              `<tr><td>${esc(c.type.replace('_', ' '))}</td><td>${esc(c.name ?? c.slug)}</td><td>${esc(c.version ?? 'unknown')}</td><td>${esc(c.versionConfidence ?? '')}</td><td>${c.active === null ? '' : c.active ? 'active' : 'inactive'}</td></tr>`,
+          )
           .join('')}</table>`
   }
 
   <h2>About this report</h2>
-  <p>This is an outside-in check of public pages, made only after the site owner proved control of the site. The scanner sends ordinary GET and HEAD requests (at most 2 per second), never logs in, guesses passwords or tries exploits. It cannot see everything an attacker with access to the server could, and a clean result is not a guarantee of security.</p>
+  ${view.outside ? '<p>This is an outside-in check of public pages, made only after the site owner proved control of the site. The scanner sends ordinary GET and HEAD requests (at most 2 per second), never logs in, guesses passwords or tries exploits. It cannot see everything an attacker with access to the server could, and a clean result is not a guarantee of security.</p>' : ''}
+  ${view.inside ? '<p>The inside view comes from the companion plugin installed on the site. It reads the installed software and configuration without changing anything, and never sends file contents or passwords. Where both views see the same software, the inside view is used.</p>' : ''}
   ${view.dataSources
     .map(
       (d) => `<p><strong>${esc(d.name)}</strong> · ${link(d.url)}${d.notice ? `<br><span class="license">${esc(d.notice)}</span>` : ''}</p>${d.licenses

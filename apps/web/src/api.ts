@@ -37,7 +37,28 @@ export interface Site {
 }
 
 // Report types come from the server package, type-only, so the shapes can't drift.
+import type { ReportView } from '@shc/report';
+import type { ScanKind } from '@shc/shared';
 export type { LockedFinding, ReportFinding, ReportView, RevealedFinding } from '@shc/report';
+export type { ScanKind };
+export type ReportComponent = ReportView['components'][number];
+
+export interface PluginStatus {
+  /** False when pairing is switched off on this server. */
+  available: boolean;
+  status: 'not_connected' | 'connected' | 'expired';
+  connectedAt: string | null;
+  expiresAt: string | null;
+  lastReportAt: string | null;
+  lastScanId: string | null;
+  pluginVersion: string | null;
+}
+
+export interface PairingCode {
+  code: string;
+  expiresAt: string;
+  serviceUrl: string;
+}
 
 export interface Billing {
   plan: 'free' | 'pro';
@@ -56,6 +77,7 @@ export interface ScanSummary {
   siteId: string;
   status: ScanStatus;
   trigger: 'manual' | 'scheduled' | 'plugin';
+  kind: ScanKind;
   createdAt: string;
   startedAt: string | null;
   finishedAt: string | null;
@@ -105,3 +127,11 @@ export function errorMessage(err: unknown): string {
   if (err instanceof ApiError) return err.message;
   return 'Could not reach the server. Check your connection and try again.';
 }
+
+export const getPlugin = (siteId: string) => api<{ plugin: PluginStatus }>(`/sites/${encodeURIComponent(siteId)}/plugin`).then((r) => r.plugin);
+
+export const createPairingCode = (siteId: string) =>
+  api<{ pairing: PairingCode }>(`/sites/${encodeURIComponent(siteId)}/plugin/pairing-code`, { method: 'POST', body: {} }).then((r) => r.pairing);
+
+export const disconnectPlugin = (siteId: string) =>
+  api<{ plugin: PluginStatus }>(`/sites/${encodeURIComponent(siteId)}/plugin`, { method: 'DELETE' }).then((r) => r.plugin);

@@ -14,6 +14,7 @@
     "@fastify/helmet": "^13.2.0",
     "@fastify/rate-limit": "^11.2.2",
     "@fastify/type-provider-typebox": "^6.3.0",
+    "@shc/companion": "0.1.0",
     "@shc/config": "0.1.0",
     "@shc/core": "0.1.0",
     "@shc/db": "0.1.0",

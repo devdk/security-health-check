@@ -1,0 +1,117 @@
+{
+  "keys": [
+    {
+      "secret": "test-only-secret-0123456789abcdef0123456789abcdef",
+      "keyId": "0b7e5c9a-3f1d-4c2e-9a8b-6d5f4e3c2b1a",
+      "key": "QL3gjs6Y_GH-TB3LIl_RoWGf5vyur4wsjB7htNe0xWg",
+      "keyHash": "0951a2b7a34f10805db35991f901a7898b983b663e52aea3451b4973490a7b1e"
+    },
+    {
+      "secret": "test-only-secret-0123456789abcdef0123456789abcdef",
+      "keyId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "key": "oyIWm4nEN54KUtfxyc1k9cvR_gQLSHMf5hGllYtxCH4",
+      "keyHash": "678b72c344dab3081465924d7e8736c05ce9c7194aa2372943717a68726e51eb"
+    }
+  ],
+  "signatures": [
+    {
+      "key": "QL3gjs6Y_GH-TB3LIl_RoWGf5vyur4wsjB7htNe0xWg",
+      "method": "POST",
+      "path": "/api/plugin/reports",
+      "timestamp": 1794400000,
+      "nonce": "nonce-abcdef0123456789xyz",
+      "body": "{\"schema\":1}",
+      "bodySha256": "67d6291b301412df4a6ca7808aeafac9d0587b06ece3c68e72bab0157cd9d52c",
+      "stringToSign": "SHC-HMAC-SHA256-V1\nPOST\n/api/plugin/reports\n1794400000\nnonce-abcdef0123456789xyz\n67d6291b301412df4a6ca7808aeafac9d0587b06ece3c68e72bab0157cd9d52c",
+      "signature": "v1=ca8cdb604fce5d0d746024f80c5e1611cdf8d2dae1dec164b4550b54ed01b153"
+    },
+    {
+      "key": "oyIWm4nEN54KUtfxyc1k9cvR_gQLSHMf5hGllYtxCH4",
+      "method": "POST",
+      "path": "/api/plugin/reports",
+      "timestamp": 1794400001,
+      "nonce": "nonce-bcdef0123456789xyz",
+      "body": "{\"site\":{\"homeUrl\":\"https://café.example\"},\"note\":\"naïve ✓\"}",
+      "bodySha256": "10511269580e200cee6042a5482ae624f25f6fb7690429dc3b7d6bc8c8c92af7",
+      "stringToSign": "SHC-HMAC-SHA256-V1\nPOST\n/api/plugin/reports\n1794400001\nnonce-bcdef0123456789xyz\n10511269580e200cee6042a5482ae624f25f6fb7690429dc3b7d6bc8c8c92af7",
+      "signature": "v1=db9851d41ec47e92cd4d6d4601a73f1b563d5e9a4e5d5ed79550e5f8b92142cc"
+    },
+    {
+      "key": "QL3gjs6Y_GH-TB3LIl_RoWGf5vyur4wsjB7htNe0xWg",
+      "method": "POST",
+      "path": "/api/plugin/reports",
+      "timestamp": 1794400002,
+      "nonce": "nonce-cdef0123456789xyz",
+      "body": "",
+      "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stringToSign": "SHC-HMAC-SHA256-V1\nPOST\n/api/plugin/reports\n1794400002\nnonce-cdef0123456789xyz\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "signature": "v1=1ddc43ec4e67feff7f512f8c7e24a82c1ec2ae188a1b3f16846f0182a40a3d7c"
+    }
+  ],
+  "pairing": [
+    {
+      "input": " abcde-fghjk ",
+      "normalized": "ABCDEFGHJK",
+      "hash": "1ee8cb3080e0b697419ab34fa85f5197fb78964f38e9d9f7252306d14005707c"
+    },
+    {
+      "input": "ol1ab cdefg",
+      "normalized": "011ABCDEFG",
+      "hash": "657c45f3dbb0c3929d11494f93d46cc088aa7b9903c57f9b324fd0cf3f65734e"
+    },
+    {
+      "input": "ABCDEFGHJK",
+      "normalized": "ABCDEFGHJK",
+      "hash": "1ee8cb3080e0b697419ab34fa85f5197fb78964f38e9d9f7252306d14005707c"
+    },
+    {
+      "input": "abcde-fghju",
+      "normalized": null,
+      "hash": null
+    },
+    {
+      "input": "abc",
+      "normalized": null,
+      "hash": null
+    },
+    {
+      "input": "abcde-fghjk-1",
+      "normalized": null,
+      "hash": null
+    }
+  ],
+  "mask": [
+    {
+      "input": "shc-admin",
+      "masked": "s******n"
+    },
+    {
+      "input": "ab",
+      "masked": "**"
+    },
+    {
+      "input": "x",
+      "masked": "*"
+    },
+    {
+      "input": "",
+      "masked": ""
+    },
+    {
+      "input": "abc",
+      "masked": "a*c"
+    },
+    {
+      "input": "averyverylongusername",
+      "masked": "a******e"
+    },
+    {
+      "input": "josé",
+      "masked": "j**é"
+    },
+    {
+      "input": "s******n",
+      "masked": "s******n"
+    }
+  ]
+}

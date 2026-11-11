@@ -15,6 +15,7 @@ COPY packages/ontology/package.json packages/ontology/
 COPY packages/scanner/package.json packages/scanner/
 COPY packages/intel/package.json packages/intel/
 COPY packages/report/package.json packages/report/
+COPY packages/companion/package.json packages/companion/
 COPY apps/api/package.json apps/api/
 COPY apps/worker/package.json apps/worker/
 COPY apps/web/package.json apps/web/

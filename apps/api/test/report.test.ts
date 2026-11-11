@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { auditEvents, findings, scans, serviceRequests, sites, subscriptions } from '@shc/db';
+import { auditEvents, findings, pluginKeys, pluginReports, scans, serviceRequests, siteComponents, sites, subscriptions } from '@shc/db';
 import type { PdfRenderer } from '../src/lib/pdf';
 import { createTestContext, get, post, resetState, signedInUser, type TestContext } from './helpers';
 
@@ -107,6 +107,73 @@ describe('report visibility (decided by the API, not the browser)', () => {
   it('waits for the scan to finish', async () => {
     const [scan] = await ctx.db.insert(scans).values({ siteId, kind: 'external', trigger: 'manual', status: 'running' }).returning();
     expect((await get(ctx, `/api/scans/${scan!.id}/report`, alice)).json().error).toBe('scan_not_finished');
+  });
+});
+
+describe('merged inside and outside report', () => {
+  const HOUR = 3_600_000;
+  const anchorTime = new Date(Date.now() - 2 * HOUR);
+
+  /** A completed scan holding one finding about Contact Form 7, as the given view saw it. */
+  async function scanWithCf7(kind: 'external' | 'inside', finishedAt: Date) {
+    const [scan] = await ctx.db
+      .insert(scans)
+      .values({ siteId, kind, trigger: kind === 'inside' ? 'plugin' : 'manual', status: 'completed', createdAt: finishedAt, finishedAt, score: 70, grade: 'C', requestCount: kind === 'inside' ? 0 : 40, baseUrl: 'https://example.com' })
+      .returning();
+    const [cf7] = await ctx.db
+      .insert(siteComponents)
+      .values({ scanId: scan!.id, siteId, softwareType: 'plugin', slug: 'contact-form-7', version: kind === 'inside' ? '5.9' : '5.3.1', versionConfidence: kind === 'inside' ? 'confirmed' : 'likely', active: kind === 'inside' ? false : null })
+      .returning();
+    const [finding] = await ctx.db
+      .insert(findings)
+      .values(
+        kind === 'inside'
+          ? { scanId: scan!.id, checkId: 'plugin.inactive-component-installed', conceptId: 'exposure/inactive-component-installed', componentId: cf7!.id, severity: 'low', title: 'INSIDE-UNUSED', explanation: 'x', fixSteps: 'x' }
+          : { scanId: scan!.id, checkId: 'vuln-match.wordfence', conceptId: 'exposure/known-vulnerable-component', componentId: cf7!.id, severity: 'critical', title: 'OUTSIDE-GUESS', explanation: 'x', fixSteps: 'x' },
+      )
+      .returning();
+    if (kind === 'inside') {
+      const [key] = await ctx.db.insert(pluginKeys).values({ siteId, keyHash: 'h', expiresAt: new Date(Date.now() + 86_400_000) }).returning();
+      await ctx.db.insert(pluginReports).values({ siteId, pluginKeyId: key!.id, scanId: scan!.id, signedAt: finishedAt, nonce: `nonce-${scan!.id}`, pluginVersion: '0.1.0', payload: {}, payloadSha256: 'x' });
+    }
+    return { scanId: scan!.id, findingId: finding!.id };
+  }
+  const report = async (scanId: string) => (await get(ctx, `/api/scans/${scanId}/report`, alice)).json().report;
+
+  it('merges each scan with the newest scan of the other kind that finished before it', async () => {
+    await makePro();
+    const paired = await scanWithCf7('inside', new Date(anchorTime.getTime() - 48 * HOUR));
+    const outside = await scanWithCf7('external', anchorTime);
+    const later = await scanWithCf7('inside', new Date(anchorTime.getTime() + HOUR));
+
+    const view = await report(outside.scanId);
+    expect(view).toMatchObject({
+      kind: 'external',
+      score: 70,
+      outside: { scanId: outside.scanId, baseUrl: 'https://example.com', requestCount: 40 },
+      inside: { scanId: paired.scanId, pluginVersion: '0.1.0' },
+    });
+    // The inside view lists Contact Form 7, so the outside vulnerability guess is dropped.
+    expect(view.findings.map((f: { id: string; source: string }) => [f.id, f.source])).toEqual([[paired.findingId, 'inside']]);
+    expect(view.components).toEqual([{ type: 'plugin', slug: 'contact-form-7', name: null, version: '5.9', versionConfidence: 'confirmed', active: false }]);
+
+    expect((await report(later.scanId)).outside.scanId).toBe(outside.scanId);
+  });
+
+  it('ignores a counterpart that finished more than 30 days earlier', async () => {
+    await makePro();
+    await scanWithCf7('inside', new Date(anchorTime.getTime() - 31 * 24 * HOUR));
+    const outside = await scanWithCf7('external', anchorTime);
+    const view = await report(outside.scanId);
+    expect(view).toMatchObject({ inside: null, findings: [{ id: outside.findingId, source: 'outside', title: 'OUTSIDE-GUESS' }] });
+  });
+
+  it('shows free users the newest scan of any kind, with inside findings locked', async () => {
+    const outside = await scanWithCf7('external', anchorTime);
+    const inside = await scanWithCf7('inside', new Date(anchorTime.getTime() + HOUR));
+    expect((await get(ctx, `/api/scans/${outside.scanId}/report`, alice)).json().error).toBe('upgrade_required');
+    const view = await report(inside.scanId);
+    expect(view.findings).toEqual([{ id: inside.findingId, locked: true, severity: 'low', category: 'Plugin' }]);
   });
 });
 

@@ -12,6 +12,7 @@
     "record-fixtures": "tsx --env-file-if-exists=../../.env scripts/record-fixtures.ts"
   },
   "dependencies": {
+    "@shc/companion": "0.1.0",
     "@shc/net": "0.1.0",
     "@shc/ontology": "0.1.0",
     "@shc/shared": "0.1.0",

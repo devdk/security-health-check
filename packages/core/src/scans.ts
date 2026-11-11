@@ -42,7 +42,7 @@ export type ScanRequestResult =
   | { ok: true; scan: ScanRow }
   | { ok: false; code: 'not_verified' | 'in_progress' | 'cooldown'; message: string; retryAfterSeconds?: number };
 
-function isUniqueViolation(err: unknown): boolean {
+export function isUniqueViolation(err: unknown): boolean {
   const e = err as { code?: string; cause?: { code?: string } };
   return e?.code === '23505' || e?.cause?.code === '23505';
 }

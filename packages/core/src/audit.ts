@@ -23,7 +23,11 @@ export type AuditEventName =
   | 'weekly_scan_changed'
   | 'scheduled_scan_skipped'
   | 'fix_requested'
-  | 'report_exported';
+  | 'report_exported'
+  | 'plugin_code_created'
+  | 'plugin_paired'
+  | 'plugin_disconnected'
+  | 'plugin_report_received';
 
 export interface AuditInput {
   event: AuditEventName;

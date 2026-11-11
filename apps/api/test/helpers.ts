@@ -49,7 +49,13 @@ export class FakeQueue implements ScanQueue {
 }
 
 export async function createTestContext(
-  options: { rateLimit?: Partial<Config['rateLimit']>; ownership?: OwnershipChecker; scanQueue?: ScanQueue; pdf?: PdfRenderer } = {},
+  options: {
+    rateLimit?: Partial<Config['rateLimit']>;
+    plugin?: Partial<Config['plugin']>;
+    ownership?: OwnershipChecker;
+    scanQueue?: ScanQueue;
+    pdf?: PdfRenderer;
+  } = {},
 ): Promise<TestContext> {
   const rateLimit = options.rateLimit ?? {};
   const base = loadConfig({
@@ -61,7 +67,7 @@ export async function createTestContext(
     RATE_LIMIT_GLOBAL_PER_MINUTE: '10000',
     RATE_LIMIT_AUTH_PER_MINUTE: '10000',
   });
-  const config: Config = { ...base, rateLimit: { ...base.rateLimit, ...rateLimit } };
+  const config: Config = { ...base, rateLimit: { ...base.rateLimit, ...rateLimit }, plugin: { ...base.plugin, ...options.plugin } };
 
   const dbHandle = createDb(config.databaseUrl, { max: 4 });
   const redis = new Redis(config.redisUrl, { maxRetriesPerRequest: 3 });

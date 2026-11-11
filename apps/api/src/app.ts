@@ -15,10 +15,12 @@ import { registerSession } from './plugins/session';
 import { authRoutes } from './routes/auth';
 import { billingRoutes } from './routes/billing';
 import { healthRoutes } from './routes/health';
+import { pluginRoutes, sitePluginRoutes } from './routes/plugin';
 import { reportRoutes } from './routes/report';
 import { scanRoutes, siteScanRoutes } from './routes/scans';
 import { siteRoutes } from './routes/sites';
 import { AuthService } from './services/auth-service';
+import { PluginService } from './services/plugin-service';
 import { ReportService } from './services/report-service';
 import { ScanService } from './services/scan-service';
 import { SessionService } from './services/session-service';
@@ -79,6 +81,7 @@ export async function buildApp(deps: AppDeps) {
   const scanService = new ScanService({ db, ownership, queue: scanQueue, cooldownMinutes: config.scan.cooldownMinutes });
   const pdf = deps.pdf ?? (config.pdf.serviceUrl ? new GotenbergPdfRenderer(config.pdf.serviceUrl) : noPdf);
   const reportService = new ReportService({ db, pdf });
+  const pluginService = new PluginService({ db, ownership, redis, queue: scanQueue, plugin: config.plugin, serviceUrl: config.web.baseUrl });
   const payments = deps.payments ?? (config.payments.provider === 'stub' ? new StubPaymentProvider(db) : new NoPaymentProvider());
 
   const cookies = await registerSession(app, config, sessions);
@@ -91,6 +94,8 @@ export async function buildApp(deps: AppDeps) {
   await app.register(scanRoutes, { prefix: '/api/scans', scans: scanService });
   await app.register(reportRoutes, { prefix: '/api', reports: reportService });
   await app.register(billingRoutes, { prefix: '/api/billing', db, payments });
+  await app.register(sitePluginRoutes, { prefix: '/api/sites', plugins: pluginService });
+  await app.register(pluginRoutes, { prefix: '/api/plugin', config, plugins: pluginService });
 
   return app;
 }

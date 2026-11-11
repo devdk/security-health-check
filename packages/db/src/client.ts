@@ -3,6 +3,9 @@ import pg from 'pg';
 import * as schema from './schema';
 
 export type Database = NodePgDatabase<typeof schema>;
+type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
+/** Where queries can run: the database itself or an open transaction. */
+export type Executor = Database | Transaction;
 
 export interface DbHandle {
   db: Database;

@@ -66,6 +66,16 @@ export interface Config {
     /** Base URL of the HTML-to-PDF service (Gotenberg). Null disables PDF export. */
     serviceUrl: string | null;
   };
+  plugin: {
+    /** Server secret every companion-plugin site key is derived from. Without it, pairing is switched off. */
+    keySecret: string | null;
+    /** How long a pairing code shown in the dashboard stays usable. */
+    pairingCodeMinutes: number;
+    /** Site keys expire; the site admin pairs again to get a new one. */
+    keyTtlDays: number;
+    /** Signed reports accepted per site key per hour. */
+    reportsPerHour: number;
+  };
   intel: {
     /** Free key from wordfence.com → Account → Integrations. Without it the Wordfence feed is skipped. */
     wordfenceApiKey: string | null;
@@ -226,6 +236,12 @@ export function loadConfig(env: Env = process.env): Config {
     pdf: {
       serviceUrl: env.PDF_SERVICE_URL?.trim() ? r.url('PDF_SERVICE_URL', ['http:', 'https:']).replace(/\/+$/, '') : null,
     },
+    plugin: {
+      keySecret: env.PLUGIN_KEY_SECRET?.trim() || null,
+      pairingCodeMinutes: r.int('PLUGIN_PAIRING_CODE_MINUTES', 15, 1, 60),
+      keyTtlDays: r.int('PLUGIN_KEY_TTL_DAYS', 365, 1, 730),
+      reportsPerHour: r.int('PLUGIN_REPORTS_PER_HOUR', 12, 1, 120),
+    },
     intel: {
       wordfenceApiKey: env.WORDFENCE_API_KEY?.trim() || null,
       nvdApiKey: env.NVD_API_KEY?.trim() || null,
@@ -236,6 +252,10 @@ export function loadConfig(env: Env = process.env): Config {
   if (!/^(\S+\s+){4}\S+$/.test(config.intel.refreshCron)) r.problems.push('INTEL_REFRESH_CRON must be a 5-field cron pattern');
   for (const [name, key] of [['WORDFENCE_API_KEY', config.intel.wordfenceApiKey], ['NVD_API_KEY', config.intel.nvdApiKey]] as const) {
     if (key && !/^[\w.-]{16,512}$/.test(key)) r.problems.push(`${name} does not look like an API key`);
+  }
+
+  if (config.plugin.keySecret !== null && config.plugin.keySecret.length < 32) {
+    r.problems.push('PLUGIN_KEY_SECRET must be at least 32 characters (use npm run setup:env to generate one)');
   }
 
   if (!/SecurityHealthCheck/i.test(config.scanner.userAgent)) {

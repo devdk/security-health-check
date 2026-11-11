@@ -1,9 +1,20 @@
 import { and, eq, lt, or, sql } from 'drizzle-orm';
+import { parseInsideReport } from '@shc/companion';
 import type { Config } from '@shc/config';
 import { audit, ensureFreshVerification, markScanFailed } from '@shc/core';
-import { scans, sites, type Database } from '@shc/db';
+import { pluginReports, scans, sites, type Database } from '@shc/db';
 import type { Fetcher, OwnershipChecker, TlsProbe } from '@shc/net';
-import { runScan, ScanError, type CheckModule, type RateLimiter, type ReleaseLookup, type ScanLogger, type VulnLookup } from '@shc/scanner';
+import {
+  analyseInside,
+  runScan,
+  ScanError,
+  type CheckModule,
+  type RateLimiter,
+  type ReleaseLookup,
+  type ScanLogger,
+  type ScanOutcome,
+  type VulnLookup,
+} from '@shc/scanner';
 import { saveOutcome } from './persist';
 
 export interface ProcessDeps {
@@ -20,6 +31,41 @@ export interface ProcessDeps {
 }
 
 export type ProcessResult = 'completed' | 'failed' | 'skipped';
+
+type ScanRow = typeof scans.$inferSelect;
+type Prepared = { ok: true; run: () => Promise<ScanOutcome> } | { ok: false; reason: string; code: string };
+
+/** What each kind of scan checks before it may start, and how it then produces its outcome. */
+async function prepare(scan: ScanRow, domain: string, deps: ProcessDeps): Promise<Prepared> {
+  if (scan.kind === 'inside') {
+    // Built from the report the plugin sent: no ownership re-check, because nothing goes to the site.
+    const [stored] = await deps.db.select({ payload: pluginReports.payload }).from(pluginReports).where(eq(pluginReports.scanId, scan.id)).limit(1);
+    const parsed = stored ? parseInsideReport(stored.payload) : null;
+    if (!parsed?.ok) return { ok: false, reason: 'The report sent by the companion plugin could not be read.', code: 'invalid_report' };
+    return { ok: true, run: () => analyseInside(parsed.report, { vulns: deps.vulns, releases: deps.releases, log: deps.log }) };
+  }
+
+  // Rule 1, enforced again right before we touch the site: the scan may have waited in
+  // the queue, and ownership may have been withdrawn since it was requested.
+  const fresh = await ensureFreshVerification(deps.db, deps.ownership, scan.siteId);
+  if (!fresh.ok) return { ok: false, reason: fresh.reason, code: 'not_verified' };
+  return {
+    ok: true,
+    run: () =>
+      runScan({
+        domain,
+        fetcher: deps.fetcher,
+        limiter: deps.limiter,
+        vulns: deps.vulns,
+        releases: deps.releases,
+        tlsProbe: deps.tlsProbe,
+        maxRequests: deps.scan.maxRequests,
+        timeoutMs: deps.scan.timeoutSeconds * 1000,
+        modules: deps.modules,
+        log: deps.log,
+      }),
+  };
+}
 
 /**
  * Runs one queued scan. Safe to call twice for the same id: only the call that moves the
@@ -42,10 +88,8 @@ export async function processScan(scanId: string, deps: ProcessDeps): Promise<Pr
     return 'failed' as const;
   };
 
-  // Rule 1, enforced again right before we touch the site: the scan may have waited in
-  // the queue, and ownership may have been withdrawn since it was requested.
-  const fresh = await ensureFreshVerification(db, deps.ownership, scan.siteId);
-  if (!fresh.ok) return fail(fresh.reason, 'not_verified');
+  const prepared = await prepare(scan, domain, deps);
+  if (!prepared.ok) return fail(prepared.reason, prepared.code);
 
   const [claimed] = await db
     .update(scans)
@@ -54,21 +98,10 @@ export async function processScan(scanId: string, deps: ProcessDeps): Promise<Pr
     .returning({ id: scans.id });
   if (!claimed) return 'skipped';
 
-  log.info({ scanId, domain }, 'scan started');
+  log.info({ scanId, domain, kind: scan.kind }, 'scan started');
   try {
-    const outcome = await runScan({
-      domain,
-      fetcher: deps.fetcher,
-      limiter: deps.limiter,
-      vulns: deps.vulns,
-      releases: deps.releases,
-      tlsProbe: deps.tlsProbe,
-      maxRequests: deps.scan.maxRequests,
-      timeoutMs: deps.scan.timeoutSeconds * 1000,
-      modules: deps.modules,
-      log,
-    });
-    await saveOutcome(db, scanId, scan.siteId, outcome);
+    const outcome = await prepared.run();
+    await saveOutcome(db, scan, outcome);
     await audit(db, {
       event: 'scan_completed',
       userId: scan.requestedBy,

@@ -1,25 +1,32 @@
 import { eq } from 'drizzle-orm';
+import { loadReportParts } from '@shc/core';
 import { findings as findingsTable, scans, siteComponents, type Database } from '@shc/db';
 import { describeExposure, EXPOSURES, standardReferences, type ExposureDef } from '@shc/ontology';
-import { computeScore, selectFreeVisible } from '@shc/report';
+import { computeScore, mergeParts, selectFreeVisible } from '@shc/report';
 import type { ScanOutcome } from '@shc/scanner';
-import { SEVERITIES } from '@shc/shared';
+import { SEVERITIES, type ScanKind } from '@shc/shared';
 
 const severityRank = (s: string) => SEVERITIES.indexOf(s as (typeof SEVERITIES)[number]);
 
 /**
  * Stores a finished scan in one transaction: the software found (site_components), the
  * findings linked to those components and to ontology concepts, which findings a free
- * user may see in full, and the score and grade.
+ * user may see in full, and the score and grade of the scan merged with its counterpart,
+ * so history shows the site's overall score at each point in time.
  */
-export async function saveOutcome(db: Database, scanId: string, siteId: string, outcome: ScanOutcome): Promise<{ score: number; grade: string }> {
+export async function saveOutcome(
+  db: Database,
+  scan: { id: string; siteId: string; kind: ScanKind },
+  outcome: ScanOutcome,
+): Promise<{ score: number; grade: string }> {
+  const { id: scanId, siteId } = scan;
   const ordered = [...outcome.findings]
     .map((f) => ({ ...f, indicatesCompromise: (EXPOSURES[f.conceptId] as ExposureDef).indicatesCompromise === true }))
     .sort((a, b) => severityRank(a.severity) - severityRank(b.severity) || a.title.localeCompare(b.title));
-  const freeVisible = selectFreeVisible(ordered);
-  const { score, grade } = computeScore(ordered);
+  // The inside view is a Pro feature: none of it counts towards the free selection.
+  const freeVisible = scan.kind === 'inside' ? new Set<number>() : selectFreeVisible(ordered);
 
-  await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
     const componentIds = new Map<string, string>();
     if (outcome.components.length > 0) {
       const rows = await tx
@@ -66,11 +73,14 @@ export async function saveOutcome(db: Database, scanId: string, siteId: string, 
       );
     }
 
+    const finishedAt = new Date();
+    const { part, counterpart } = await loadReportParts(tx, { ...scan, baseUrl: outcome.baseUrl, requestCount: outcome.requestCount, finishedAt });
+    const { score, grade } = computeScore(mergeParts(part, counterpart).findings);
     await tx
       .update(scans)
       .set({
         status: 'completed',
-        finishedAt: new Date(),
+        finishedAt,
         requestCount: outcome.requestCount,
         baseUrl: outcome.baseUrl,
         moduleResults: outcome.modules,
@@ -79,6 +89,6 @@ export async function saveOutcome(db: Database, scanId: string, siteId: string, 
         grade,
       })
       .where(eq(scans.id, scanId));
+    return { score, grade };
   });
-  return { score, grade };
 }

@@ -131,9 +131,26 @@ export function ScanPage() {
       <header className="page-header report-header">
         <div>
           <h1>{report.domain}</h1>
-          <p className="muted">
-            Scanned {formatDate(report.finishedAt)} · {report.requestCount} requests to {report.baseUrl}
-          </p>
+          <div className="report-parts muted">
+            {report.outside ? (
+              <p>
+                Outside scan: {formatDate(report.outside.finishedAt)} · {report.outside.requestCount} requests
+                {report.outside.baseUrl ? ` to ${report.outside.baseUrl}` : ''}
+              </p>
+            ) : (
+              <p>No outside scan is combined with this report. Run a scan to add one.</p>
+            )}
+            {report.inside ? (
+              <p>
+                Inside report: {formatDate(report.inside.finishedAt)}
+                {report.inside.pluginVersion ? ` · plugin ${report.inside.pluginVersion}` : ''}
+              </p>
+            ) : (
+              <p>
+                No inside report is combined with this report. <Link to={`/sites/${report.siteId}`}>Connect the plugin</Link> to add one.
+              </p>
+            )}
+          </div>
           <p>
             <SeverityCounts counts={report.counts} />
           </p>
@@ -194,7 +211,10 @@ export function ScanPage() {
                 <tbody>
                   {g.items.map((c) => (
                     <tr key={`${c.type}:${c.slug}`}>
-                      <td>{c.name ?? c.slug}</td>
+                      <td>
+                        {c.name ?? c.slug}
+                        {c.active === false && <span className="badge badge-inactive">Inactive</span>}
+                      </td>
                       <td>
                         {c.version ?? <span className="muted">unknown</span>}
                         {c.versionConfidence && c.versionConfidence !== 'confirmed' && <span className="muted small"> · {c.versionConfidence}</span>}
